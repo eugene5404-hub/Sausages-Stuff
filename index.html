@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#8b2f1f">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Sausages & Stuff</title>
+<title>Sausages & Stuff v6</title>
 <style>
 :root{--red:#8b2f1f;--cream:#fff8ed;--ink:#2b211b;--muted:#75685f;--card:#fff;--line:#eadbca;--ok:#2f6f44;--bad:#a33}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
@@ -17,7 +17,7 @@ main{max-width:920px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;margin-
 #installBtn{display:none;background:#fff;color:var(--red);margin-top:10px}.photo-preview{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px}
 .notice{padding:12px;border-radius:12px;background:#fff0d5;margin:12px 0;font-size:14px}.composition{background:#faf1e5;border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}.meatrow,.formula-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(90px,1fr) auto;gap:8px;margin:8px 0;align-items:center}.sum{font-weight:800;margin-top:8px}.sum.ok{color:var(--ok)}.sum.bad{color:var(--bad)}.mini{font-size:12px;color:var(--muted)} .formula-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(85px,1fr) auto;gap:8px;margin:8px 0;align-items:center}
 .formula-other{grid-template-columns:minmax(0,2fr) minmax(85px,1fr) minmax(75px,.8fr) auto}
-.formula-row select,.formula-row input{width:100%;padding:11px;border:1px solid #d9c8b7;border-radius:10px;background:#fff;font:inherit}
+.formula-row select,.formula-row input,.meatrow select,.meatrow input{width:100%;padding:11px;border:1px solid #d9c8b7;border-radius:10px;background:#fff;font:inherit}
 .subtotal{font-weight:800;margin-top:8px}.subtotal.ok{color:var(--ok)}.subtotal.bad{color:var(--bad)}
 @media(max-width:520px){.formula-other{grid-template-columns:minmax(0,1fr) 85px 75px auto}}
 @media(max-width:520px){.two{grid-template-columns:1fr}.meatrow,.formula-row{grid-template-columns:1fr 90px auto}}
@@ -43,20 +43,20 @@ main{max-width:920px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;margin-
 
 <div class="field"><label>Recipe name</label><input id="name" required></div>
 <div class="two">
-<div class="field"><label>Category</label><select id="category"><option>Fresh</option><option>Breakfast</option><option>Bratwurst</option><option>Italian</option><option>Spicy</option><option>Chicken</option><option>Other</option></select></div>
+<div class="field"><label>Category</label><select id="category"><option>Breakfast</option><option>Bratwurst</option><option>Chicken</option><option>Fresh</option><option>Italian</option><option>Other</option><option>Spicy</option></select></div>
 <div class="field"><label>Batch meat + fat weight (kg)</label><input id="baseKg" type="number" step="0.01" min="0.01" value="1" required oninput="updateEditorBreakdown()"></div>
 </div>
 
 <div class="composition">
 <h3>🥩 Meat & Fat Composition</h3>
-<div class="mini">Add as many meat/fat types as needed. Percentages must total exactly 100%.</div>
+<div class="mini">Choose a common meat or fat, or choose Custom for your own ingredient. Percentages must total exactly 100%.</div>
 <div id="meatRows"></div>
 <div id="pctSum" class="sum bad">Total: 0%</div>
 <div id="editorBreakdown" class="composition" style="margin-top:10px"><b>Batch breakdown</b><div class="mini">Enter a batch weight above to see grams for each meat/fat type.</div><div id="editorBreakdownRows"></div></div>
 <button type="button" class="btn" onclick="addMeatRow()">＋ Add meat / fat</button>
 </div>
 
-<div class="field"><label>Salt (g/kg of total meat + fat)</label><input id="salt" type="number" step="0.1" value="18" required></div>
+<div class="field"><label>Salt for this batch (g)</label><input id="salt" type="number" min="0" step="0.1" value="18" required><div class="mini">Enter the salt amount for the batch weight above. When you save, the app converts it automatically to a 1 kg formula.</div></div>
 <div class="composition">
 <h3>🌿 Seasonings</h3>
 <div class="mini">Enter the amount of each seasoning for the batch above. When you save, the app converts it automatically to a 1 kg formula.</div>
@@ -107,16 +107,37 @@ function imgFor(r){return r.photo||"data:image/svg+xml;charset=UTF-8,"+encodeURI
 function showTab(id,btn){document.querySelectorAll("main>section").forEach(s=>s.style.display="none");document.getElementById(id).style.display="block";document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");if(id==="recipes")renderBuilt();if(id==="mine")renderMine();if(id==="add")resetForm()}
 function meatText(r){return (r.meats||[]).map(x=>x[0]+" "+x[1]+"%").join(" • ")}
 function card(r,isMine=false){return `<article class="card"><img src="${imgFor(r)}" alt=""><div class="cardbody"><span class="tag">${esc(r.category)}</span><h3>${esc(r.name)}</h3><p class="muted">${esc(meatText(r))}</p><div class="row"><button class="btn primary" onclick='viewRecipe(${JSON.stringify(r).replace(/'/g,"&#39;")})'>View & Scale</button>${isMine?`<button class="btn" onclick="editRecipe('${r.id}')">Edit</button><button class="btn danger" onclick="deleteRecipe('${r.id}')">Delete</button>`:""}</div></div></article>`}
-function renderBuilt(){builtGrid.innerHTML=built.map(r=>card(r)).join("")}
+function renderBuilt(){builtGrid.innerHTML=[...built].sort((a,b)=>a.name.localeCompare(b.name)).map(r=>card(r)).join("")}
 function renderMine(){myGrid.innerHTML=mine.length?mine.map(r=>card(r,true)).join(""):`<div class="notice">No recipes yet. Tap “＋ Add Recipe” to create your first one.</div>`}
 
-function addMeatRow(name="",pct=""){let d=document.createElement("div");d.className="meatrow";d.innerHTML=`<input class="mname" placeholder="e.g. Pork shoulder" value="${esc(name)}"><input class="mpct" type="number" min="0" max="100" step="0.1" placeholder="%" value="${pct}"><button type="button" class="btn danger" onclick="this.parentElement.remove();updatePct()">×</button>`;meatRows.appendChild(d);d.querySelector(".mpct").addEventListener("input",()=>{updatePct();updateEditorBreakdown()});d.querySelector(".mname").addEventListener("input",updateEditorBreakdown);updatePct();updateEditorBreakdown()}
+const meatOptions=["Beef brisket","Beef chuck","Beef fat / suet","Chicken breast","Chicken thigh","Chicken skin","Duck","Duck fat","Lamb fat","Lamb shoulder","Pork back fat","Pork belly","Pork jowl","Pork shoulder","Turkey breast","Turkey thigh","Veal","Custom"].sort((a,b)=>a==="Custom"?1:b==="Custom"?-1:a.localeCompare(b));
+function meatOptionHtml(selected=""){
+ let opts=meatOptions.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("");
+ if(selected && !meatOptions.includes(selected)) opts=`<option value="${esc(selected)}" selected>${esc(selected)}</option>`+opts;
+ return opts;
+}
+function addMeatRow(name="",pct=""){
+ let d=document.createElement("div");d.className="meatrow";
+ d.innerHTML=`<select class="mname">${meatOptionHtml(name||meatOptions[0])}</select><input class="mpct" type="number" min="0" max="100" step="0.1" placeholder="%" value="${pct}"><button type="button" class="btn danger" onclick="this.parentElement.remove();updatePct();updateEditorBreakdown()">×</button>`;
+ meatRows.appendChild(d);
+ d.querySelector(".mname").addEventListener("change",e=>{
+   if(e.target.value==="Custom"){
+     let v=prompt("Enter custom meat or fat name:");
+     if(v && v.trim()){
+       let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild);
+     } else e.target.value=meatOptions[0];
+   }
+   updateEditorBreakdown();
+ });
+ d.querySelector(".mpct").addEventListener("input",()=>{updatePct();updateEditorBreakdown()});
+ updatePct();updateEditorBreakdown();
+}
 function updatePct(){let s=[...document.querySelectorAll(".mpct")].reduce((a,e)=>a+(Number(e.value)||0),0);pctSum.textContent=`Total: ${s.toFixed(1)}%`;pctSum.className="sum "+(Math.abs(s-100)<0.01?"ok":"bad")}
 function updateEditorBreakdown(){let kg=Number(baseKg.value)||0;let rows=[...document.querySelectorAll("#meatRows .meatrow")];editorBreakdownRows.innerHTML=rows.map(r=>{let n=r.querySelector(".mname").value.trim()||"Unnamed";let pct=Number(r.querySelector(".mpct").value)||0;return `<div class="ingredient">${esc(n)}: <b>${(kg*1000*pct/100).toFixed(1)} g</b> (${pct.toFixed(1)}%)</div>`}).join("")}
 function getMeats(){return [...document.querySelectorAll("#meatRows .meatrow")].map(r=>[r.querySelector(".mname").value.trim(),Number(r.querySelector(".mpct").value)||0]).filter(x=>x[0])}
-const seasoningOptions=["Black pepper","White pepper","White pepper powder","Garlic powder","Onion powder","Ginger powder","Mace powder","Nutmeg","Coriander powder","Coriander seed","Caraway powder","Caraway seed","Mustard powder","Fennel seed","Cumin","Paprika","Smoked paprika","Chilli flakes","Chilli powder","Sage","Thyme","Marjoram leaves","Rosemary","Parsley","Oregano","Basil","Allspice","Celery seed","Dill seed","Bay leaf","Custom"];
-const liquidOptions=["Ice water","Water","Milk","Heavy cream","Beer","Red wine","White wine","Stock","Chicken stock","Beef stock","Apple juice","Orange juice","Cider","Custom"];
-const otherOptions=["Whole egg","Egg white","Egg yolk","Breadcrumbs","Sugar","Honey","Cheese","Onion","Fresh garlic","Fresh herbs","Mustard","Vinegar","Lemon juice","Custom"];
+const seasoningOptions=["Black pepper","White pepper","White pepper powder","Garlic powder","Onion powder","Ginger powder","Mace powder","Nutmeg","Coriander powder","Coriander seed","Caraway powder","Caraway seed","Mustard powder","Fennel seed","Cumin","Paprika","Smoked paprika","Chilli flakes","Chilli powder","Sage","Thyme","Marjoram leaves","Rosemary","Parsley","Oregano","Basil","Allspice","Celery seed","Dill seed","Bay leaf","Custom"].sort((a,b)=>a.localeCompare(b));
+const liquidOptions=["Ice water","Water","Milk","Heavy cream","Beer","Red wine","White wine","Stock","Chicken stock","Beef stock","Apple juice","Orange juice","Cider","Custom"].sort((a,b)=>a.localeCompare(b));
+const otherOptions=["Whole egg","Egg white","Egg yolk","Breadcrumbs","Sugar","Honey","Cheese","Onion","Fresh garlic","Fresh herbs","Mustard","Vinegar","Lemon juice","Custom"].sort((a,b)=>a.localeCompare(b));
 
 function optionHtml(list,selected=""){return list.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("")}
 function addFormulaRow(type,name="",value=""){
@@ -173,7 +194,7 @@ recipeForm.onsubmit=e=>{
  let sRows=getFormulaRows("seasoning"),target=Number(seasoningTotal.value)||0,sSum=sRows.reduce((a,x)=>a+x[1],0);
  if(sRows.length&&target>0&&Math.abs(sSum-target)>0.01){alert("Seasoning rows total "+sSum.toFixed(2)+" g, but the target is "+target.toFixed(2)+" g. Please make them match.");return}
  let id=editId.value||Date.now().toString(),old=mine.find(x=>x.id===id);
- let r={id,name:name.value,category:category.value,baseKg:1,meats:ms,salt:Number(salt.value),seasonings:normalizeSeasonings(sRows,batchKg),liquids:normalizeLiquids(getFormulaRows("liquid"),batchKg),others:normalizeOthers(getOtherRows(),batchKg),casing:casing.value,method:method.value,notes:notes.value,photo:photoData||(old&&old.photo)||""};
+ let r={id,name:name.value,category:category.value,baseKg:1,meats:ms,salt:batchKg>0?Number(salt.value)/batchKg:0,seasonings:normalizeSeasonings(sRows,batchKg),liquids:normalizeLiquids(getFormulaRows("liquid"),batchKg),others:normalizeOthers(getOtherRows(),batchKg),casing:casing.value,method:method.value,notes:notes.value,photo:photoData||(old&&old.photo)||""};
  let i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=r;else mine.push(r);localStorage.setItem("ss_recipes",JSON.stringify(mine));resetForm();showTab("mine")
 }
 function editRecipe(id){
