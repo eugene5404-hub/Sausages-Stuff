@@ -1,0 +1,18 @@
+{
+  "name": "Sausage Kitchen",
+  "short_name": "Sausage Kitchen",
+  "description": "Your personal sausage recipe cookbook, pantry and shopping list.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f3ee",
+  "theme_color": "#b64b2a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
