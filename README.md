@@ -16,8 +16,8 @@ Salt and seasonings are stored in g/kg and liquids in ml/kg based on total meat 
 Fresh-sausage formulas only in this version; curing salts and validated cured/fermented processes are not calculated.
 
 
-## v7 update
+## v8 update
 - Common meat/fat ingredients now use an alphabetical dropdown.
 - Custom is the final option for any meat or fat not listed.
 - Salt remains normalized to g/kg when a recipe is saved.
-- Service worker cache bumped to v7.
+- Service worker cache bumped to v8.
