@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sausage Kitchen</title>
+<style>
+:root{--bg:#f7f3ee;--card:#fff;--ink:#2b211b;--muted:#76665b;--accent:#b64b2a;--accent2:#e8a04d;--line:#eadfd6}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:linear-gradient(135deg,#6d291b,#b64b2a);color:white;padding:24px 18px 22px;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:30px}.tag{opacity:.88;margin-top:4px}
+.wrap{max-width:900px;margin:auto;padding:16px}
+.search{width:100%;padding:14px 16px;border:0;border-radius:14px;font-size:16px;margin-top:18px}
+.filters{display:flex;gap:8px;overflow:auto;padding:14px 0}.chip{border:1px solid var(--line);background:white;border-radius:99px;padding:9px 14px;white-space:nowrap}.chip.active{background:var(--accent);color:white;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 3px 12px #4b2b1810}
+.emoji{font-size:42px}.meta{color:var(--muted);font-size:13px}.card h2{margin:6px 0}.desc{color:#5d514a;line-height:1.45}.btn{background:var(--accent);color:white;border:0;border-radius:12px;padding:11px 14px;font-weight:700}.secondary{background:#f1e8e1;color:var(--ink);margin-left:7px}
+.hidden{display:none}
+dialog{width:min(680px,94vw);border:0;border-radius:20px;padding:0;box-shadow:0 20px 60px #0005}.modal{padding:22px}.modal h2{margin-top:0}.modal li{margin:7px 0}.close{float:right;border:0;background:#eee;border-radius:50%;width:34px;height:34px}
+footer{text-align:center;color:var(--muted);padding:28px 10px}
+
+.recipe-photo{width:100%;height:170px;object-fit:cover;border-radius:14px;margin-bottom:10px;background:#eee}
+.photo-wrap{margin:10px 0}.photo-wrap input{width:100%;padding:10px}
+.actionbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.actionbar .btn{margin:0}
+.list-item{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:10px 0}
+.list-item input{width:22px;height:22px}.qty{font-weight:700}.small{font-size:12px;color:var(--muted)}
+
+.inventory-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin:9px 0}
+.badge{display:inline-block;background:#f1e8e1;border-radius:99px;padding:4px 9px;font-size:12px;margin:2px}
+.expiring{font-weight:700}.match{border-left:5px solid var(--accent2)}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+<h1>🌭 Sausage Kitchen</h1>
+<div class="tag">A recipe app for people who take sausages seriously.</div>
+<input id="search" class="search" placeholder="Search bratwurst, pasta, curry, BBQ…">
+</div>
+</header>
+<main class="wrap">
+<div class="actionbar">
+<button class="btn" onclick="openFinder()">🌭 What Can I Cook?</button>
+<button class="btn secondary" onclick="openCollection()">🧊 Sausage Collection <span id="stockCount"></span></button>
+<button class="btn secondary" onclick="openPantry()">🧊 My Sausages <span id="pantryCount"></span></button>
+<button class="btn secondary" onclick="openShopping()">🛒 Shopping List <span id="cartCount"></span></button>
+<button class="btn secondary" onclick="openEditor()">＋ My Recipe</button>
+</div>
+<div class="filters" id="filters"></div>
+<div class="grid" id="recipes"></div>
+<footer>Made for sausage lovers • Save your favourites ⭐</footer>
+</main>
+
+<dialog id="dlg"><div class="modal">
+<button class="close" onclick="dlg.close()">×</button>
+<div id="detail"></div>
+</div></dialog>
+
+<script>
+const starterRecipes=[
+{id:1,name:"Beer & Onion Bratwurst",cat:"Bratwurst",time:"35 min",emoji:"🍺",desc:"Pan-browned bratwurst with caramelised onions, beer and a rich onion sauce.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&w=900&q=80",ing:["4 bratwurst sausages","2 large onions, sliced","330 ml lager","1 tbsp butter","1 tbsp oil","1 tsp mustard","1 tsp brown sugar","Salt & black pepper"],steps:["Brown the bratwurst in oil over medium heat, then remove.","Add butter and onions. Cook 10–12 minutes until golden.","Add brown sugar and mustard, then pour in the beer.","Return sausages to the pan and simmer 10–12 minutes.","Reduce the sauce until glossy. Season and serve with mash or crusty bread."],tags:["bratwurst","beer","onion","german","bbq"]},
+{id:2,name:"Sausage & Mash",cat:"Comfort Food",time:"30 min",emoji:"🥔",desc:"Classic bangers, creamy mashed potatoes and rich onion gravy.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=80",ing:["6 pork sausages","800 g potatoes","2 onions","400 ml beef stock","1 tbsp flour","50 g butter","100 ml milk","Salt & pepper"],steps:["Boil potatoes until tender; drain and mash with butter and milk.","Brown sausages and cook through.","Cook onions until soft, stir in flour, then gradually add stock.","Simmer gravy until thickened.","Serve sausages over mash with plenty of onion gravy."],tags:["pork","potato","gravy","comfort"]},
+{id:3,name:"Spicy Sausage Pasta",cat:"Pasta",time:"25 min",emoji:"🍝",desc:"Fast tomato pasta with spicy Italian sausage, garlic and parmesan.",fav:false,own:false,servings:3,photo:"https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?auto=format&fit=crop&w=900&q=80",ing:["300 g Italian sausage","250 g pasta","1 onion, diced","3 garlic cloves","400 g chopped tomatoes","1 tsp chilli flakes","Parmesan","Olive oil"],steps:["Remove sausage meat from casings and brown in olive oil.","Add onion, garlic and chilli; cook 2–3 minutes.","Add tomatoes and simmer 10 minutes.","Cook pasta until al dente and reserve a little pasta water.","Toss pasta through the sauce and finish with parmesan."],tags:["italian","pasta","spicy","tomato"]},
+{id:4,name:"Honey Garlic Sausages",cat:"Quick",time:"20 min",emoji:"🍯",desc:"Sticky sweet-and-savoury sausages that work brilliantly with rice or vegetables.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1528712306091-ed0763094c98?auto=format&fit=crop&w=900&q=80",ing:["500 g sausages","3 tbsp honey","2 tbsp soy sauce","3 garlic cloves, minced","1 tsp sesame oil","Spring onions","Sesame seeds"],steps:["Brown sausages in a skillet until cooked through.","Mix honey, soy, garlic and sesame oil.","Pour sauce into the skillet and toss sausages until sticky.","Cook 2–3 minutes until glazed.","Scatter with spring onions and sesame seeds."],tags:["honey","garlic","asian","quick"]},
+{id:5,name:"Sausage & Pepper Hoagie",cat:"Sandwich",time:"25 min",emoji:"🥖",desc:"Juicy sausages with sweet peppers, onions and melted cheese in a toasted roll.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=900&q=80",ing:["4 sausages","2 bell peppers, sliced","1 onion, sliced","4 rolls","Mozzarella or provolone","Olive oil","Italian herbs"],steps:["Brown sausages and cook until done; slice diagonally.","Sauté peppers and onion until soft and slightly charred.","Return sausage slices to the pan and season with herbs.","Fill toasted rolls and top with cheese.","Grill briefly until cheese melts."],tags:["sandwich","pepper","cheese","quick"]},
+{id:6,name:"Sausage Curry",cat:"Curry",time:"40 min",emoji:"🍛",desc:"Comforting sausages simmered in a fragrant curry and tomato sauce.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=900&q=80",ing:["6 sausages","1 onion","2 garlic cloves","1 tbsp curry powder","1 tsp cumin","400 g chopped tomatoes","250 ml stock","100 ml coconut milk"],steps:["Brown sausages and set aside.","Cook onion and garlic until soft.","Add curry powder and cumin; toast for 30 seconds.","Add tomatoes, stock and sausages. Simmer 20 minutes.","Stir in coconut milk and simmer another 5 minutes. Serve with rice."],tags:["curry","spicy","coconut","rice"]}
+];
+
+let recipes=JSON.parse(localStorage.getItem("sausageRecipes")||"null")||starterRecipes;
+let shopping=JSON.parse(localStorage.getItem("sausageShopping")||"[]");
+let category="All",editingId=null;
+
+const filters=document.getElementById("filters"),box=document.getElementById("recipes"),search=document.getElementById("search"),dlg=document.getElementById("dlg"),detail=document.getElementById("detail");
+function save(){localStorage.setItem("sausageRecipes",JSON.stringify(recipes));localStorage.setItem("sausageShopping",JSON.stringify(shopping))}
+function esc(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function cats(){return ["All","My Recipes",...new Set(recipes.map(r=>r.cat).filter(Boolean))]}
+function renderFilters(){filters.innerHTML=cats().map(c=>`<button class="chip ${c===category?'active':''}" onclick="category='${esc(c)}';render()">${esc(c)}</button>`).join("")}
+function render(){
+ renderFilters(); const q=search.value.toLowerCase();
+ const list=recipes.filter(r=>(category==="All"||(category==="My Recipes"?r.own:r.cat===category))&&`${r.name} ${r.cat} ${r.desc} ${(r.tags||[]).join(" ")} ${r.ing.join(" ")}`.toLowerCase().includes(q));
+ box.innerHTML=list.length?list.map(r=>`<article class="card">
+ ${r.photo?`<img class="recipe-photo" src="${esc(r.photo)}" onerror="this.style.display='none'">`:`<div class="emoji">${r.emoji||"🌭"}</div>`}
+ <div class="meta">${esc(r.cat||"My Recipe")} • ${esc(r.time||"—")} • serves ${r.servings||4}</div>
+ <h2>${esc(r.name)}</h2><p class="desc">${esc(r.desc||"")}</p>
+ <button class="btn" onclick="openRecipe(${r.id})">View Recipe</button>
+ <button class="btn secondary" onclick="toggleFav(${r.id})">${r.fav?'★ Saved':'☆ Save'}</button>
+ </article>`).join(""):"<p>No sausage recipes found.</p>";
+ updateCart();
+}
+function openRecipe(id){
+ const r=recipes.find(x=>x.id===id);
+ detail.innerHTML=`${r.photo?`<img class="recipe-photo" src="${esc(r.photo)}">`:`<div class="emoji">${r.emoji||"🌭"}</div>`}
+ <div class="meta">${esc(r.cat||"My Recipe")} • ${esc(r.time||"—")} • serves <span id="servN">${r.servings||4}</span></div>
+ <h2>${esc(r.name)}</h2><p>${esc(r.desc||"")}</p>
+ <label><b>Servings:</b> <input id="servInput" type="number" min="1" max="30" value="${r.servings||4}" style="width:70px;padding:7px" onchange="changeServings(${r.id},this.value)"></label>
+ <h3>Ingredients</h3><ul id="scaledIng">${scaledIngredients(r, r.servings||4)}</ul>
+ <button class="btn secondary" onclick="addIngredients(${r.id})">🛒 Add Ingredients to Shopping List</button>
+ <h3>Method</h3><ol>${r.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+ <button class="btn" onclick="toggleFav(${r.id});openRecipe(${r.id})">${r.fav?'★ Saved':'☆ Save favourite'}</button>
+ ${r.own?`<button class="btn secondary" onclick="openEditor(${r.id})">Edit</button><button class="btn secondary" onclick="deleteRecipe(${r.id})">Delete</button>`:""}`;
+ dlg.showModal();
+}
+function parseQty(s){let m=s.match(/^(\d+(?:\.\d+)?)(\s*)(.*)$/);return m?{n:parseFloat(m[1]),rest:m[3]}:null}
+function scaledIngredients(r,serv){
+ const base=r.servings||4, factor=serv/base;
+ return r.ing.map(x=>{let q=parseQty(x);if(!q)return `<li>${esc(x)}</li>`;let n=Math.round(q.n*factor*100)/100;return `<li><b>${n}</b> ${esc(q.rest)}</li>`}).join("");
+}
+function changeServings(id,val){
+ const r=recipes.find(x=>x.id===id), n=Math.max(1,parseInt(val)||1);
+ document.getElementById("servN").textContent=n;document.getElementById("scaledIng").innerHTML=scaledIngredients(r,n);
+}
+function toggleFav(id){let r=recipes.find(x=>x.id===id);r.fav=!r.fav;save();render()}
+function addIngredients(id){
+ const r=recipes.find(x=>x.id===id);
+ r.ing.forEach(x=>{if(!shopping.some(y=>y.text===x))shopping.push({text:x,done:false})});save();updateCart();alert("Ingredients added to your shopping list.");
+}
+function updateCart(){let e=document.getElementById("cartCount");if(e)e.textContent=shopping.length?`(${shopping.length})`:""}
+function openShopping(){
+ detail.innerHTML=`<h2>🛒 Shopping List</h2>
+ <div>${shopping.length?shopping.map((x,i)=>`<div class="list-item"><input type="checkbox" ${x.done?"checked":""} onchange="toggleShop(${i})"><span class="${x.done?'small':''}">${esc(x.text)}</span><button class="btn secondary" onclick="removeShop(${i})">×</button></div>`).join(""):"<p>Your shopping list is empty.</p>"}</div>
+ <br><button class="btn" onclick="clearDone()">Clear Checked</button><button class="btn secondary" onclick="shopping=[];save();openShopping();updateCart()">Clear All</button>`;
+ dlg.showModal();
+}
+function toggleShop(i){shopping[i].done=!shopping[i].done;save();openShopping();updateCart()}
+function removeShop(i){shopping.splice(i,1);save();openShopping();updateCart()}
+function clearDone(){shopping=shopping.filter(x=>!x.done);save();openShopping();updateCart()}
+function openFinder(){
+ detail.innerHTML=`<h2>🌭 What Can I Cook?</h2><p>Tell me what sausage you have.</p>
+ <input id="finderInput" placeholder="e.g. bratwurst, Italian, pork, chicken" style="width:100%;padding:13px">
+ <br><br><button class="btn" onclick="findRecipes()">Find Recipes</button><div id="finderResults"></div>`;
+ dlg.showModal();
+}
+function findRecipes(){
+ const q=finderInput.value.toLowerCase().trim();
+ const matches=recipes.filter(r=>!q||`${r.name} ${r.cat} ${(r.tags||[]).join(" ")} ${r.ing.join(" ")}`.toLowerCase().includes(q));
+ finderResults.innerHTML=`<h3>${matches.length} recipe${matches.length===1?"":"s"} found</h3>`+
+ (matches.length?matches.map(r=>`<div class="card"><b>${r.emoji||"🌭"} ${esc(r.name)}</b><p class="meta">${esc(r.cat)} • ${esc(r.time)}</p><button class="btn" onclick="openRecipe(${r.id})">View</button></div>`).join(""):"<p>Try pork, bratwurst, Italian, spicy, curry, chicken or another sausage type.</p>");
+}
+function openEditor(id=null){
+ editingId=id; const r=id?recipes.find(x=>x.id===id):{name:"",cat:"My Recipes",time:"",emoji:"🌭",desc:"",ing:[],steps:[],servings:4,photo:"",tags:[]};
+ detail.innerHTML=`<h2>${id?"Edit Recipe":"Add My Recipe"}</h2>
+ <label>Name<br><input id="rn" value="${esc(r.name)}" style="width:100%;padding:11px"></label><br>
+ <label>Category<br><input id="rc" value="${esc(r.cat)}" style="width:100%;padding:11px"></label><br>
+ <label>Sausage type / tags<br><input id="rg" value="${esc((r.tags||[]).join(", "))}" placeholder="pork, bratwurst, spicy" style="width:100%;padding:11px"></label><br>
+ <label>Cooking time<br><input id="rt" value="${esc(r.time)}" placeholder="e.g. 30 min" style="width:100%;padding:11px"></label><br>
+ <label>Servings<br><input id="rv" type="number" min="1" value="${r.servings||4}" style="width:100%;padding:11px"></label><br>
+ <label>Emoji<br><input id="re" value="${esc(r.emoji||"🌭")}" style="width:100%;padding:11px"></label><br>
+ <label>Recipe photo URL (optional)<br><input id="rp" value="${esc(r.photo||"")}" placeholder="Paste an image URL" style="width:100%;padding:11px"></label><br>
+ <label>Description<br><textarea id="rd" style="width:100%;padding:11px">${esc(r.desc||"")}</textarea></label><br>
+ <label>Ingredients — one per line<br><textarea id="ri" rows="7" style="width:100%;padding:11px">${esc(r.ing.join("\n"))}</textarea></label><br>
+ <label>Method — one step per line<br><textarea id="rs" rows="8" style="width:100%;padding:11px">${esc(r.steps.join("\n"))}</textarea></label><br>
+ <button class="btn" onclick="saveRecipe()">Save Recipe</button><button class="btn secondary" onclick="dlg.close()">Cancel</button>`;
+ dlg.showModal();
+}
+function saveRecipe(){
+ const r={id:editingId||Date.now(),name:rn.value.trim(),cat:rc.value.trim()||"My Recipes",tags:rg.value.split(",").map(x=>x.trim()).filter(Boolean),time:rt.value.trim(),servings:Math.max(1,parseInt(rv.value)||4),emoji:re.value.trim()||"🌭",photo:rp.value.trim(),desc:rd.value.trim(),ing:ri.value.split("\n").map(x=>x.trim()).filter(Boolean),steps:rs.value.split("\n").map(x=>x.trim()).filter(Boolean),fav:false,own:true};
+ if(!r.name||!r.ing.length||!r.steps.length){alert("Please enter a name, ingredients and method.");return}
+ if(editingId){const old=recipes.find(x=>x.id===editingId);r.fav=old.fav;recipes=recipes.map(x=>x.id===editingId?r:x)}else recipes.unshift(r);
+ save();dlg.close();render();
+}
+function deleteRecipe(id){if(confirm("Delete this recipe?")){recipes=recipes.filter(r=>r.id!==id);save();dlg.close();render()}}
+
+let pantry=JSON.parse(localStorage.getItem("sausagePantry")||"[]");
+function savePantry(){localStorage.setItem("sausagePantry",JSON.stringify(pantry));updatePantryCount()}
+function updatePantryCount(){let e=document.getElementById("pantryCount");if(e)e.textContent=pantry.length?`(${pantry.length})`:""}
+function daysLeft(date){
+ if(!date)return null;
+ const a=new Date();a.setHours(0,0,0,0);const b=new Date(date+"T00:00:00");
+ return Math.ceil((b-a)/86400000);
+}
+function expiryText(x){
+ let d=daysLeft(x.expiry); if(d===null)return "No expiry set";
+ if(d<0)return `Expired ${Math.abs(d)} day${Math.abs(d)==1?"":"s"} ago`;
+ if(d===0)return "Expires today";
+ if(d===1)return "Expires tomorrow";
+ return `Expires in ${d} days`;
+}
+function openPantry(){
+ detail.innerHTML=`<h2>🧊 My Sausage Collection</h2>
+ <p>Keep track of the sausages in your fridge or freezer. The recipe finder can use this list.</p>
+ <button class="btn" onclick="openPantryEditor()">＋ Add Sausages</button><br><br>
+ ${pantry.length?pantry.map((x,i)=>`<div class="card">
+ <div style="font-size:30px">${esc(x.emoji||"🌭")}</div>
+ <h3 style="margin:3px 0">${esc(x.name)}</h3>
+ <div class="meta">${esc(x.type||"Sausage")} • ${esc(x.location||"Not specified")} • Qty: ${esc(x.qty||"1")}</div>
+ <p class="small">${esc(expiryText(x))}</p>
+ <button class="btn" onclick="cookFromPantry(${i})">Find Recipes</button>
+ <button class="btn secondary" onclick="openPantryEditor(${i})">Edit</button>
+ <button class="btn secondary" onclick="deletePantry(${i})">Delete</button>
+ </div>`).join(""):"<p>You haven't added any sausages yet.</p>"}`;
+ dlg.showModal();
+}
+function openPantryEditor(i=null){
+ const x=i===null?{name:"",type:"",qty:"1",location:"Fridge",expiry:"",emoji:"🌭"}:pantry[i];
+ detail.innerHTML=`<h2>${i===null?"Add Sausages":"Edit Sausages"}</h2>
+ <label>Name<br><input id="pn" value="${esc(x.name)}" placeholder="e.g. Johnsonville Bratwurst" style="width:100%;padding:11px"></label><br>
+ <label>Type<br><input id="pt" value="${esc(x.type)}" placeholder="e.g. bratwurst, Italian, chicken" style="width:100%;padding:11px"></label><br>
+ <label>Quantity<br><input id="pq" value="${esc(x.qty)}" placeholder="e.g. 6 sausages / 500 g" style="width:100%;padding:11px"></label><br>
+ <label>Stored in<br><select id="pl" style="width:100%;padding:11px"><option ${x.location==="Fridge"?"selected":""}>Fridge</option><option ${x.location==="Freezer"?"selected":""}>Freezer</option><option ${x.location==="Pantry"?"selected":""}>Pantry</option></select></label><br>
+ <label>Use-by / expiry date<br><input id="pe" type="date" value="${esc(x.expiry)}" style="width:100%;padding:11px"></label><br>
+ <label>Emoji<br><input id="pem" value="${esc(x.emoji||"🌭")}" style="width:100%;padding:11px"></label><br><br>
+ <button class="btn" onclick="savePantryItem(${i===null?"null":i})">Save</button>
+ <button class="btn secondary" onclick="openPantry()">Cancel</button>`;
+ dlg.showModal();
+}
+function savePantryItem(i){
+ const x={name:pn.value.trim(),type:pt.value.trim(),qty:pq.value.trim(),location:pl.value,expiry:pe.value,emoji:pem.value.trim()||"🌭"};
+ if(!x.name){alert("Please enter the sausage name.");return}
+ if(i===null)pantry.unshift(x);else pantry[i]=x;
+ savePantry();openPantry();
+}
+function deletePantry(i){if(confirm("Remove these sausages from your collection?")){pantry.splice(i,1);savePantry();openPantry()}}
+function cookFromPantry(i){
+ const q=(pantry[i].type||pantry[i].name).toLowerCase();
+ const matches=recipes.filter(r=>`${r.name} ${r.cat} ${(r.tags||[]).join(" ")} ${r.ing.join(" ")}`.toLowerCase().includes(q));
+ detail.innerHTML=`<h2>🍳 Recipes for ${esc(pantry[i].name)}</h2>
+ <p>${matches.length?`I found ${matches.length} matching recipe${matches.length===1?"":"s"}.`:"No exact matches yet. You can add a personal recipe for this sausage."}</p>
+ ${matches.map(r=>`<div class="card"><b>${r.emoji||"🌭"} ${esc(r.name)}</b><p class="meta">${esc(r.cat)} • ${esc(r.time)}</p><button class="btn" onclick="openRecipe(${r.id})">Cook This</button></div>`).join("")}
+ <br><button class="btn secondary" onclick="openPantry()">← My Sausages</button>`;
+}
+const oldOpenFinder=openFinder;
+openFinder=function(){
+ const types=[...new Set(pantry.map(x=>x.type).filter(Boolean))];
+ detail.innerHTML=`<h2>🌭 What Can I Cook?</h2><p>Enter a sausage type, or choose one you already have.</p>
+ ${types.length?`<div class="filters">${types.map(t=>`<button class="chip" onclick="finderInput.value='${esc(t)}';findRecipes()">${esc(t)}</button>`).join("")}</div>`:""}
+ <input id="finderInput" placeholder="e.g. bratwurst, Italian, pork, chicken" style="width:100%;padding:13px">
+ <br><br><button class="btn" onclick="findRecipes()">Find Recipes</button><div id="finderResults"></div>`;
+ dlg.showModal();
+}
+updatePantryCount();
+
+
+let sausageStock=JSON.parse(localStorage.getItem("sausageStock")||"[]");
+function saveStock(){localStorage.setItem("sausageStock",JSON.stringify(sausageStock));updateStockCount()}
+function updateStockCount(){let e=document.getElementById("stockCount");if(e)e.textContent=sausageStock.length?`(${sausageStock.reduce((a,x)=>a+(parseInt(x.qty)||0),0)})`:""}
+function daysUntil(s){if(!s)return null;let a=new Date(),b=new Date(s+"T23:59:59");return Math.ceil((b-a)/86400000)}
+function expiryText(s){let d=daysUntil(s);if(d===null)return "";if(d<0)return "Expired";if(d===0)return "Use today";if(d<=3)return `Use within ${d} day${d===1?"":"s"}`;return `Best before ${s}`}
+function openCollection(){
+ detail.innerHTML=`<h2>🧊 My Sausage Collection</h2>
+ <p class="desc">Keep track of what is in your fridge and freezer, then find recipes that use it.</p>
+ <button class="btn" onclick="openStockEditor()">＋ Add Sausages</button>
+ <button class="btn secondary" onclick="cookFromStock()">🍳 Cook From My Stock</button>
+ <div id="stockList">${sausageStock.length?sausageStock.map((x,i)=>`<div class="inventory-card">
+ <b>🌭 ${esc(x.name)}</b><br>
+ <span class="badge">Qty: ${x.qty}</span><span class="badge">${esc(x.place)}</span>
+ ${x.expiry?`<span class="badge expiring">${esc(expiryText(x.expiry))}</span>`:""}
+ ${x.notes?`<p class="small">${esc(x.notes)}</p>`:""}
+ <button class="btn secondary" onclick="openStockEditor(${i})">Edit</button>
+ <button class="btn secondary" onclick="useOne(${i})">− Use 1</button>
+ <button class="btn secondary" onclick="deleteStock(${i})">Delete</button>
+ </div>`).join(""):"<p>No sausages added yet.</p>"}</div>`;
+ dlg.showModal();
+}
+function openStockEditor(i=null){
+ const x=i===null?{name:"",qty:1,place:"Freezer",expiry:"",notes:""}:sausageStock[i];
+ detail.innerHTML=`<h2>${i===null?"Add Sausages":"Edit Sausages"}</h2>
+ <label>Sausage type / name<br><input id="sn" value="${esc(x.name)}" placeholder="e.g. German Bratwurst" style="width:100%;padding:11px"></label><br>
+ <label>Quantity<br><input id="sq" type="number" min="1" value="${x.qty}" style="width:100%;padding:11px"></label><br>
+ <label>Stored in<br><select id="sp" style="width:100%;padding:11px"><option ${x.place==="Fridge"?"selected":""}>Fridge</option><option ${x.place==="Freezer"?"selected":""}>Freezer</option><option ${x.place==="Pantry"?"selected":""}>Pantry</option></select></label><br>
+ <label>Best before / use-by (optional)<br><input id="se" type="date" value="${esc(x.expiry)}" style="width:100%;padding:11px"></label><br>
+ <label>Notes<br><textarea id="snotes" style="width:100%;padding:11px">${esc(x.notes)}</textarea></label><br>
+ <button class="btn" onclick="saveStockItem(${i===null?"null":i})">Save</button>
+ <button class="btn secondary" onclick="openCollection()">Cancel</button>`;
+ dlg.showModal();
+}
+function saveStockItem(i){
+ let x={name:sn.value.trim(),qty:Math.max(1,parseInt(sq.value)||1),place:sp.value,expiry:se.value,notes:snotes.value.trim()};
+ if(!x.name){alert("Please enter the sausage name.");return}
+ if(i===null)sausageStock.unshift(x);else sausageStock[i]=x;
+ saveStock();openCollection();
+}
+function useOne(i){sausageStock[i].qty--;if(sausageStock[i].qty<=0)sausageStock.splice(i,1);saveStock();openCollection()}
+function deleteStock(i){if(confirm("Remove this from your collection?")){sausageStock.splice(i,1);saveStock();openCollection()}}
+function stockMatches(r){
+ let text=`${r.name} ${r.cat} ${(r.tags||[]).join(" ")} ${r.ing.join(" ")}`.toLowerCase();
+ return sausageStock.filter(s=>text.includes(s.name.toLowerCase())||s.name.toLowerCase().split(/\s+/).some(w=>w.length>3&&text.includes(w)));
+}
+function cookFromStock(){
+ let found=recipes.map(r=>({r,m:stockMatches(r)})).filter(x=>x.m.length).sort((a,b)=>b.m.length-a.m.length);
+ detail.innerHTML=`<h2>🍳 Recipes From Your Stock</h2><p class="desc">Matches are based on the sausages currently in your collection.</p>
+ ${found.length?found.map(x=>`<div class="card match"><b>${x.r.emoji||"🌭"} ${esc(x.r.name)}</b><p class="meta">Uses: ${x.m.map(s=>esc(s.name)).join(", ")}</p><button class="btn" onclick="openRecipe(${x.r.id})">View Recipe</button></div>`).join(""):"<p>I couldn't find a direct match yet. Add sausage-type tags to your own recipes, or use the What Can I Cook? search.</p>"}
+ <br><button class="btn secondary" onclick="openCollection()">← Collection</button>`;
+ dlg.showModal();
+}
+function openFinder(){
+ let options=sausageStock.map(s=>`<button class="chip" onclick="finderInput.value='${esc(s.name)}';findRecipes()">${esc(s.name)}</button>`).join("");
+ detail.innerHTML=`<h2>🌭 What Can I Cook?</h2><p>Enter a sausage type, or pick one from your collection.</p>
+ ${options?`<div class="filters">${options}</div>`:""}
+ <input id="finderInput" placeholder="e.g. bratwurst, Italian, pork, chicken" style="width:100%;padding:13px">
+ <br><br><button class="btn" onclick="findRecipes()">Find Recipes</button><div id="finderResults"></div>`;
+ dlg.showModal();
+}
+updateStockCount();
+
+search.addEventListener("input",render);render();
+</script>
+</body></html>
