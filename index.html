@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sausage Kitchen</title>
+<title>Sausages & Stuff</title>
 <style>
 :root{--bg:#f7f3ee;--card:#fff;--ink:#2b211b;--muted:#76665b;--accent:#b64b2a;--accent2:#e8a04d;--line:#eadfd6}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
@@ -28,6 +28,7 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 .inventory-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin:9px 0}
 .badge{display:inline-block;background:#f1e8e1;border-radius:99px;padding:4px 9px;font-size:12px;margin:2px}
 .expiring{font-weight:700}.match{border-left:5px solid var(--accent2)}
+.install-btn{margin:14px 0 4px;width:100%;font-weight:700}.site-footer{text-align:center;padding:28px 16px 40px;color:#756b64;font-size:13px}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -35,14 +36,14 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Sausage Kitchen">
+<meta name="apple-mobile-web-app-title" content="Sausages & Stuff">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
 <header>
 <div class="wrap">
-<h1>🌭 Sausage Kitchen</h1>
-<div class="tag">A recipe app for people who take sausages seriously.</div>
+<h1>🌭 Sausages & Stuff</h1>
+<div class="tag">A recipe app for people who take sausages seriously.</div><button id="installBtn" class="btn install-btn">📲 Install Sausages &amp; Stuff App</button>
 <input id="search" class="search" placeholder="Search bratwurst, pasta, curry, BBQ…">
 </div>
 </header>
@@ -56,7 +57,7 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 </div>
 <div class="filters" id="filters"></div>
 <div class="grid" id="recipes"></div>
-<footer>Made for sausage lovers • Save your favourites ⭐</footer>
+<footer>© 2026 Sausages &amp; Stuff. All rights reserved.</footer>
 </main>
 
 <dialog id="dlg"><div class="modal">
@@ -66,12 +67,12 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 
 <script>
 const starterRecipes=[
-{id:1,name:"Beer & Onion Bratwurst",cat:"Bratwurst",time:"35 min",emoji:"🍺",desc:"Pan-browned bratwurst with caramelised onions, beer and a rich onion sauce.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?auto=format&fit=crop&w=900&q=80",ing:["4 bratwurst sausages","2 large onions, sliced","330 ml lager","1 tbsp butter","1 tbsp oil","1 tsp mustard","1 tsp brown sugar","Salt & black pepper"],steps:["Brown the bratwurst in oil over medium heat, then remove.","Add butter and onions. Cook 10–12 minutes until golden.","Add brown sugar and mustard, then pour in the beer.","Return sausages to the pan and simmer 10–12 minutes.","Reduce the sauce until glossy. Season and serve with mash or crusty bread."],tags:["bratwurst","beer","onion","german","bbq"]},
-{id:2,name:"Sausage & Mash",cat:"Comfort Food",time:"30 min",emoji:"🥔",desc:"Classic bangers, creamy mashed potatoes and rich onion gravy.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=80",ing:["6 pork sausages","800 g potatoes","2 onions","400 ml beef stock","1 tbsp flour","50 g butter","100 ml milk","Salt & pepper"],steps:["Boil potatoes until tender; drain and mash with butter and milk.","Brown sausages and cook through.","Cook onions until soft, stir in flour, then gradually add stock.","Simmer gravy until thickened.","Serve sausages over mash with plenty of onion gravy."],tags:["pork","potato","gravy","comfort"]},
-{id:3,name:"Spicy Sausage Pasta",cat:"Pasta",time:"25 min",emoji:"🍝",desc:"Fast tomato pasta with spicy Italian sausage, garlic and parmesan.",fav:false,own:false,servings:3,photo:"https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?auto=format&fit=crop&w=900&q=80",ing:["300 g Italian sausage","250 g pasta","1 onion, diced","3 garlic cloves","400 g chopped tomatoes","1 tsp chilli flakes","Parmesan","Olive oil"],steps:["Remove sausage meat from casings and brown in olive oil.","Add onion, garlic and chilli; cook 2–3 minutes.","Add tomatoes and simmer 10 minutes.","Cook pasta until al dente and reserve a little pasta water.","Toss pasta through the sauce and finish with parmesan."],tags:["italian","pasta","spicy","tomato"]},
-{id:4,name:"Honey Garlic Sausages",cat:"Quick",time:"20 min",emoji:"🍯",desc:"Sticky sweet-and-savoury sausages that work brilliantly with rice or vegetables.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1528712306091-ed0763094c98?auto=format&fit=crop&w=900&q=80",ing:["500 g sausages","3 tbsp honey","2 tbsp soy sauce","3 garlic cloves, minced","1 tsp sesame oil","Spring onions","Sesame seeds"],steps:["Brown sausages in a skillet until cooked through.","Mix honey, soy, garlic and sesame oil.","Pour sauce into the skillet and toss sausages until sticky.","Cook 2–3 minutes until glazed.","Scatter with spring onions and sesame seeds."],tags:["honey","garlic","asian","quick"]},
-{id:5,name:"Sausage & Pepper Hoagie",cat:"Sandwich",time:"25 min",emoji:"🥖",desc:"Juicy sausages with sweet peppers, onions and melted cheese in a toasted roll.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=900&q=80",ing:["4 sausages","2 bell peppers, sliced","1 onion, sliced","4 rolls","Mozzarella or provolone","Olive oil","Italian herbs"],steps:["Brown sausages and cook until done; slice diagonally.","Sauté peppers and onion until soft and slightly charred.","Return sausage slices to the pan and season with herbs.","Fill toasted rolls and top with cheese.","Grill briefly until cheese melts."],tags:["sandwich","pepper","cheese","quick"]},
-{id:6,name:"Sausage Curry",cat:"Curry",time:"40 min",emoji:"🍛",desc:"Comforting sausages simmered in a fragrant curry and tomato sauce.",fav:false,own:false,servings:4,photo:"https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?auto=format&fit=crop&w=900&q=80",ing:["6 sausages","1 onion","2 garlic cloves","1 tbsp curry powder","1 tsp cumin","400 g chopped tomatoes","250 ml stock","100 ml coconut milk"],steps:["Brown sausages and set aside.","Cook onion and garlic until soft.","Add curry powder and cumin; toast for 30 seconds.","Add tomatoes, stock and sausages. Simmer 20 minutes.","Stir in coconut milk and simmer another 5 minutes. Serve with rice."],tags:["curry","spicy","coconut","rice"]}
+{id:1,name:"Beer & Onion Bratwurst",cat:"Bratwurst",time:"35 min",emoji:"🍺",desc:"Pan-browned bratwurst with caramelised onions, beer and a rich onion sauce.",fav:false,own:false,servings:4,photo:"images/beer-onion-bratwurst.jpg",ing:["4 bratwurst sausages","2 large onions, sliced","330 ml lager","1 tbsp butter","1 tbsp oil","1 tsp mustard","1 tsp brown sugar","Salt & black pepper"],steps:["Brown the bratwurst in oil over medium heat, then remove.","Add butter and onions. Cook 10–12 minutes until golden.","Add brown sugar and mustard, then pour in the beer.","Return sausages to the pan and simmer 10–12 minutes.","Reduce the sauce until glossy. Season and serve with mash or crusty bread."],tags:["bratwurst","beer","onion","german","bbq"]},
+{id:2,name:"Sausage & Mash",cat:"Comfort Food",time:"30 min",emoji:"🥔",desc:"Classic bangers, creamy mashed potatoes and rich onion gravy.",fav:false,own:false,servings:4,photo:"images/sausage-mash.svg",ing:["6 pork sausages","800 g potatoes","2 onions","400 ml beef stock","1 tbsp flour","50 g butter","100 ml milk","Salt & pepper"],steps:["Boil potatoes until tender; drain and mash with butter and milk.","Brown sausages and cook through.","Cook onions until soft, stir in flour, then gradually add stock.","Simmer gravy until thickened.","Serve sausages over mash with plenty of onion gravy."],tags:["pork","potato","gravy","comfort"]},
+{id:3,name:"Spicy Sausage Pasta",cat:"Pasta",time:"25 min",emoji:"🍝",desc:"Fast tomato pasta with spicy Italian sausage, garlic and parmesan.",fav:false,own:false,servings:3,photo:"images/sausage-pasta.svg",ing:["300 g Italian sausage","250 g pasta","1 onion, diced","3 garlic cloves","400 g chopped tomatoes","1 tsp chilli flakes","Parmesan","Olive oil"],steps:["Remove sausage meat from casings and brown in olive oil.","Add onion, garlic and chilli; cook 2–3 minutes.","Add tomatoes and simmer 10 minutes.","Cook pasta until al dente and reserve a little pasta water.","Toss pasta through the sauce and finish with parmesan."],tags:["italian","pasta","spicy","tomato"]},
+{id:4,name:"Honey Garlic Sausages",cat:"Quick",time:"20 min",emoji:"🍯",desc:"Sticky sweet-and-savoury sausages that work brilliantly with rice or vegetables.",fav:false,own:false,servings:4,photo:"images/honey-garlic-sausages.svg",ing:["500 g sausages","3 tbsp honey","2 tbsp soy sauce","3 garlic cloves, minced","1 tsp sesame oil","Spring onions","Sesame seeds"],steps:["Brown sausages in a skillet until cooked through.","Mix honey, soy, garlic and sesame oil.","Pour sauce into the skillet and toss sausages until sticky.","Cook 2–3 minutes until glazed.","Scatter with spring onions and sesame seeds."],tags:["honey","garlic","asian","quick"]},
+{id:5,name:"Sausage & Pepper Hoagie",cat:"Sandwich",time:"25 min",emoji:"🥖",desc:"Juicy sausages with sweet peppers, onions and melted cheese in a toasted roll.",fav:false,own:false,servings:4,photo:"images/sausage-pepper-hoagie.svg",ing:["4 sausages","2 bell peppers, sliced","1 onion, sliced","4 rolls","Mozzarella or provolone","Olive oil","Italian herbs"],steps:["Brown sausages and cook until done; slice diagonally.","Sauté peppers and onion until soft and slightly charred.","Return sausage slices to the pan and season with herbs.","Fill toasted rolls and top with cheese.","Grill briefly until cheese melts."],tags:["sandwich","pepper","cheese","quick"]},
+{id:6,name:"Sausage Curry",cat:"Curry",time:"40 min",emoji:"🍛",desc:"Comforting sausages simmered in a fragrant curry and tomato sauce.",fav:false,own:false,servings:4,photo:"images/sausage-curry.svg",ing:["6 sausages","1 onion","2 garlic cloves","1 tbsp curry powder","1 tsp cumin","400 g chopped tomatoes","250 ml stock","100 ml coconut milk"],steps:["Brown sausages and set aside.","Cook onion and garlic until soft.","Add curry powder and cumin; toast for 30 seconds.","Add tomatoes, stock and sausages. Simmer 20 minutes.","Stir in coconut milk and simmer another 5 minutes. Serve with rice."],tags:["curry","spicy","coconut","rice"]}
 ];
 
 let recipes=JSON.parse(localStorage.getItem("sausageRecipes")||"null")||starterRecipes;
@@ -308,4 +309,9 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 </script>
-</body></html>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{})); }
+const localRecipePhotos={"Beer & Onion Bratwurst":"images/beer-onion-bratwurst.jpg","Sausage & Mash":"images/sausage-mash.svg","Spicy Sausage Pasta":"images/sausage-pasta.svg","Honey Garlic Sausages":"images/honey-garlic-sausages.svg","Sausage & Pepper Hoagie":"images/sausage-pepper-hoagie.svg","Sausage Curry":"images/sausage-curry.svg"};
+try{const stored=JSON.parse(localStorage.getItem("sausageRecipes")||"null");if(Array.isArray(stored)){let changed=false;stored.forEach(r=>{if(!r.own&&localRecipePhotos[r.name]&&r.photo!==localRecipePhotos[r.name]){r.photo=localRecipePhotos[r.name];changed=true;}});if(changed)localStorage.setItem("sausageRecipes",JSON.stringify(stored));}}catch(e){}
+let deferredInstallPrompt=null;const installBtn=document.getElementById("installBtn");window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;});installBtn?.addEventListener("click",async()=>{if(deferredInstallPrompt){deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;}else{alert("To install: tap Chrome's ⋮ menu, then choose Install app or Add to Home screen.");}});window.addEventListener("appinstalled",()=>{installBtn.textContent="✓ Sausages & Stuff Installed";});
+</script><footer class="site-footer">© 2026 Sausages &amp; Stuff. All rights reserved.</footer></body></html>

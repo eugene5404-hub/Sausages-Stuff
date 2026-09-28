@@ -1,11 +1,11 @@
-# Sausage Kitchen PWA
+# Sausages & Stuff
 
-Open `index.html` through HTTPS to install it as an app on Android.
+A sausage-focused recipe app with personal recipes, sausage collection, shopping list, recipe finder and offline PWA support.
 
 ## Install on Android
-1. Put this folder on an HTTPS web host.
-2. Open the site in Chrome on the Android phone.
-3. Use Chrome's menu and choose **Install app** / **Add to Home screen**.
-4. The app then opens full-screen like an installed app.
+Open the GitHub Pages HTTPS address in Chrome and tap **Install Sausages & Stuff App**. If Chrome does not show the prompt, use Chrome ⋮ → Install app / Add to Home screen.
 
-Recipe, pantry and shopping-list data is stored locally in the browser.
+## Copyright
+© 2026 Sausages & Stuff. All rights reserved.
+
+Starter recipe artwork is stored locally in the `images/` folder.

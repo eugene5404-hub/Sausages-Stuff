@@ -1,6 +1,6 @@
 {
-  "name": "Sausage Kitchen",
-  "short_name": "Sausage Kitchen",
+  "name": "Sausages & Stuff",
+  "short_name": "Sausages & Stuff",
   "description": "Your personal sausage recipe cookbook, pantry and shopping list.",
   "start_url": "./index.html",
   "display": "standalone",
