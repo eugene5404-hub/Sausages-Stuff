@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#8b2f1f">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Sausages & Stuff</title>
+<style>
+:root{--red:#8b2f1f;--cream:#fff8ed;--ink:#2b211b;--muted:#75685f;--card:#fff;--line:#eadbca}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--red);color:white;padding:18px 16px;position:sticky;top:0;z-index:5}header h1{margin:0;font-size:24px}header p{margin:4px 0 0;opacity:.9}
+main{max-width:900px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;margin-bottom:14px;overflow:auto}.tabs button,.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;background:#f0dfcf;color:var(--ink)}.tabs button.active,.btn.primary{background:var(--red);color:white}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 3px 12px #5a32130d}.card img{width:100%;height:180px;object-fit:cover;background:#ead9c5}.cardbody{padding:14px}.tag{display:inline-block;font-size:12px;background:#f4e7d8;padding:4px 8px;border-radius:99px;margin:2px}.muted{color:var(--muted)}h2{margin:8px 0}h3{margin:4px 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.field{margin:10px 0}.field label{display:block;font-weight:700;margin-bottom:5px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #d9c8b7;border-radius:10px;background:white;font:inherit}.field textarea{min-height:100px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.recipe-view{display:none}.recipe-view img{width:100%;max-height:360px;object-fit:cover;border-radius:16px}.ingredient{padding:8px 0;border-bottom:1px solid var(--line)}footer{text-align:center;color:var(--muted);padding:30px 10px;font-size:13px}
+#installBtn{display:none;background:white;color:var(--red);margin-top:10px}.photo-preview{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px}
+.notice{padding:12px;border-radius:12px;background:#fff0d5;margin:12px 0;font-size:14px}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🌭 Sausages & Stuff</h1><p>Make your own sausages • formulas, weights & batch scaling</p><button id="installBtn" class="btn">📲 Install App</button></header>
+<main>
+<div class="tabs"><button class="active" onclick="showTab('recipes',this)">Recipes</button><button onclick="showTab('mine',this)">My Recipes</button><button onclick="showTab('add',this)">＋ Add Recipe</button></div>
+<section id="recipes"><h2>Sausage Recipes</h2><div id="builtGrid" class="grid"></div></section>
+<section id="mine" style="display:none"><div class="row" style="justify-content:space-between;align-items:center"><h2>My Recipes</h2><button class="btn primary" onclick="showTab('add')">＋ Add Recipe</button></div><div id="myGrid" class="grid"></div></section>
+<section id="add" style="display:none"><h2 id="formTitle">Add Sausage Recipe</h2><div class="notice">Fresh-sausage formulas only in this version. Curing salts and fermented/shelf-stable processes are not calculated here.</div>
+<form id="recipeForm">
+<input type="hidden" id="editId">
+<div class="field"><label>Recipe name</label><input id="name" required></div>
+<div class="two"><div class="field"><label>Category</label><select id="category"><option>Fresh</option><option>Breakfast</option><option>Bratwurst</option><option>Italian</option><option>Spicy</option><option>Chicken</option><option>Other</option></select></div><div class="field"><label>Meat type</label><input id="meat" placeholder="e.g. Pork shoulder" required></div></div>
+<div class="two"><div class="field"><label>Base meat weight (kg)</label><input id="baseKg" type="number" step="0.01" min="0.01" value="1" required></div><div class="field"><label>Salt (g/kg)</label><input id="salt" type="number" step="0.1" value="18" required></div></div>
+<div class="field"><label>Seasonings (one per line: ingredient, g/kg)</label><textarea id="seasonings" placeholder="Black pepper, 2.5&#10;Garlic powder, 2"></textarea></div>
+<div class="field"><label>Liquids (one per line: ingredient, ml/kg)</label><textarea id="liquids" placeholder="Ice water, 60"></textarea></div>
+<div class="field"><label>Casing</label><input id="casing" placeholder="32–35 mm natural hog casing"></div>
+<div class="field"><label>Method / steps</label><textarea id="method" placeholder="1. Chill meat...&#10;2. Grind...&#10;3. Mix..."></textarea></div>
+<div class="field"><label>Notes</label><textarea id="notes"></textarea></div>
+<div class="field"><label>📷 Recipe picture</label><input id="photo" type="file" accept="image/*" capture="environment"><img id="preview" class="photo-preview" style="display:none"><button type="button" id="removePhoto" class="btn" style="display:none;margin-top:8px">Remove Photo</button></div>
+<div class="row"><button class="btn primary" type="submit">Save Recipe</button><button type="button" class="btn" onclick="resetForm();showTab('mine')">Cancel</button></div>
+</form></section>
+<section id="view" class="recipe-view"></section>
+</main><footer>© 2026 Sausages & Stuff • Your recipes are stored on this device.</footer>
+<script>
+const built=[
+{name:"Classic Fresh Pork Sausage",category:"Fresh",meat:"Pork shoulder",baseKg:1,salt:18,seasonings:[["Black pepper",2.5],["Sage",1.5],["Garlic powder",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Chill meat. Grind. Mix salt and seasonings thoroughly. Add ice water and mix until tacky. Stuff into casing, link, chill and cook thoroughly.",notes:"Scale all quantities to your meat weight."},
+{name:"Italian Fennel Sausage",category:"Italian",meat:"Pork shoulder",baseKg:1,salt:18,seasonings:[["Fennel seed",4],["Black pepper",2],["Garlic powder",2],["Chilli flakes",0.8]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Chill, grind, mix seasonings with meat, add water and mix until tacky. Stuff and link.",notes:"Excellent grilled or with pasta."},
+{name:"Beer & Onion Bratwurst",category:"Bratwurst",meat:"Pork shoulder",baseKg:1,salt:18,seasonings:[["White pepper",2],["Nutmeg",0.5],["Garlic powder",1],["Onion powder",2]],liquids:[["Cold lager",80]],casing:"30–32 mm hog casing",method:"Keep everything cold. Grind, mix dry ingredients, add beer and bind well. Stuff gently and link.",notes:"Use cold beer."},
+{name:"Garlic & Herb Sausage",category:"Fresh",meat:"Pork shoulder",baseKg:1,salt:18,seasonings:[["Garlic powder",3],["Parsley",2],["Black pepper",2],["Thyme",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Grind chilled meat. Add salt and seasonings. Add water gradually while mixing until the farce becomes sticky. Stuff and link.",notes:"Keep the mixture cold throughout."},
+{name:"Smoky Paprika Sausage",category:"Spicy",meat:"Pork shoulder",baseKg:1,salt:18,seasonings:[["Smoked paprika",6],["Black pepper",2],["Garlic powder",2],["Cumin",1]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Grind, mix dry ingredients thoroughly, add water and bind. Stuff and link.",notes:"Adjust chilli separately if desired."}
+];
+let mine=JSON.parse(localStorage.getItem("ss_recipes")||"[]"), photoData="";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const imgFor=r=>r.photo||"data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500"><rect width="100%" height="100%" fill="#ead9c5"/><text x="50%" y="52%" text-anchor="middle" font-size="100">🌭</text></svg>`);
+function showTab(id,btn){document.querySelectorAll("main>section").forEach(s=>s.style.display="none");document.getElementById(id).style.display="block";document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));if(btn)btn.classList.add("active");if(id==="recipes")renderBuilt();if(id==="mine")renderMine();if(id==="add")resetForm();}
+function card(r,isMine=false){return `<article class="card"><img src="${imgFor(r)}" alt=""><div class="cardbody"><span class="tag">${esc(r.category)}</span><h3>${esc(r.name)}</h3><p class="muted">${esc(r.meat)} • ${r.salt} g salt/kg</p><div class="row"><button class="btn primary" onclick='viewRecipe(${JSON.stringify(r).replace(/'/g,"&#39;")})'>View & Scale</button>${isMine?`<button class="btn" onclick="editRecipe('${r.id}')">Edit</button><button class="btn" onclick="deleteRecipe('${r.id}')">Delete</button>`:""}</div></div></article>`}
+function renderBuilt(){builtGrid.innerHTML=built.map(r=>card(r)).join("")}
+function renderMine(){myGrid.innerHTML=mine.length?mine.map(r=>card(r,true)).join(""):`<div class="notice">No recipes yet. Tap “＋ Add Recipe” to create your first one.</div>`}
+function parseLines(text){return text.split("\\n").map(x=>x.trim()).filter(Boolean).map(x=>{let i=x.lastIndexOf(",");return i<0?[x,0]:[x.slice(0,i).trim(),Number(x.slice(i+1).trim())]})}
+function viewRecipe(r){document.querySelectorAll("main>section").forEach(s=>s.style.display="none");let v=document.getElementById("view");v.style.display="block";document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));let qty=r.baseKg;v.innerHTML=`<button class="btn" onclick="showTab('recipes')">← Back</button><h2>${esc(r.name)}</h2><img src="${imgFor(r)}"><p><span class="tag">${esc(r.category)}</span> ${esc(r.meat)}</p><div class="field"><label>Batch meat weight (kg)</label><input id="scaleKg" type="number" min="0.01" step="0.01" value="${qty}" oninput="scaleView(${JSON.stringify(r).replace(/"/g,'&quot;')})"></div><div id="scaled"></div><h3>Method</h3><p>${esc(r.method).replace(/\\n/g,"<br>")}</p><h3>Notes</h3><p>${esc(r.notes||"")}</p>`;scaleView(r)}
+function scaleView(r){let kg=Number(document.getElementById("scaleKg").value)||r.baseKg, f=kg/r.baseKg;let out=`<div class="ingredient"><b>Salt:</b> ${(r.salt*r.baseKg*f).toFixed(1)} g</div>`;for(let [n,x] of r.seasonings)out+=`<div class="ingredient">${esc(n)}: ${(x*r.baseKg*f).toFixed(1)} g</div>`;for(let [n,x] of r.liquids)out+=`<div class="ingredient">${esc(n)}: ${(x*r.baseKg*f).toFixed(1)} ml</div>`;out+=`<div class="ingredient"><b>Casing:</b> ${esc(r.casing||"As required")}</div>`;document.getElementById("scaled").innerHTML=out}
+photo.onchange=e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{let im=new Image();im.onload=()=>{let max=1000,scale=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext("2d").drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL("image/jpeg",.76);preview.src=photoData;preview.style.display="block";removePhoto.style.display="inline-block"};im.src=reader.result};reader.readAsDataURL(f)}
+removePhoto.onclick=()=>{photoData="";photo.value="";preview.style.display="none";removePhoto.style.display="none"}
+recipeForm.onsubmit=e=>{e.preventDefault();let id=editId.value||Date.now().toString();let old=mine.find(x=>x.id===id);let r={id,name:name.value,category:category.value,meat:meat.value,baseKg:Number(baseKg.value),salt:Number(salt.value),seasonings:parseLines(seasonings.value),liquids:parseLines(liquids.value),casing:casing.value,method:method.value,notes:notes.value,photo:photoData||(old&&old.photo)||""};let i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=r;else mine.push(r);localStorage.setItem("ss_recipes",JSON.stringify(mine));resetForm();showTab("mine")}
+function editRecipe(id){let r=mine.find(x=>x.id===id);if(!r)return;showTab("add");editId.value=r.id;name.value=r.name;category.value=r.category;meat.value=r.meat;baseKg.value=r.baseKg;salt.value=r.salt;seasonings.value=r.seasonings.map(x=>x.join(", ")).join("\\n");liquids.value=r.liquids.map(x=>x.join(", ")).join("\\n");casing.value=r.casing;method.value=r.method;notes.value=r.notes;photoData=r.photo||"";if(photoData){preview.src=photoData;preview.style.display="block";removePhoto.style.display="inline-block"}formTitle.textContent="Edit Sausage Recipe"}
+function deleteRecipe(id){if(confirm("Delete this recipe?")){mine=mine.filter(x=>x.id!==id);localStorage.setItem("ss_recipes",JSON.stringify(mine));renderMine()}}
+function resetForm(){recipeForm.reset();editId.value="";photoData="";preview.style.display="none";removePhoto.style.display="none";formTitle.textContent="Add Sausage Recipe"}
+let deferredPrompt;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display="inline-block"});installBtn.onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display="none"}};
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+renderBuilt();
+</script></body></html>
