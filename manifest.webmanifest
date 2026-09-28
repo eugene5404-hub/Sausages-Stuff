@@ -1,9 +1,0 @@
-{
-  "name":"Sausages & Stuff",
-  "short_name":"Sausages & Stuff",
-  "start_url":"./",
-  "display":"standalone",
-  "background_color":"#fff8ed",
-  "theme_color":"#8b2f1f",
-  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
-}
