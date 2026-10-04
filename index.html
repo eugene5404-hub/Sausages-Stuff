@@ -94,11 +94,11 @@ main{max-width:920px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;margin-
 
 <script>
 const built=[
-{name:"Classic Fresh Pork Sausage",category:"Fresh",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Black pepper",2.5],["Sage",1.5],["Garlic powder",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Chill meat and fat. Grind. Mix salt and seasonings thoroughly. Add ice water and mix until tacky. Stuff into casing, link, chill and cook thoroughly.",notes:"A simple 70/30 pork-and-fat base."},
-{name:"Italian Fennel Sausage",category:"Italian",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Fennel seed",4],["Black pepper",2],["Garlic powder",2],["Chilli flakes",0.8]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Chill, grind, mix seasonings with meat, add water and mix until tacky. Stuff and link.",notes:"Excellent grilled or with pasta."},
-{name:"Beer & Onion Bratwurst",category:"Bratwurst",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",20],["Beef chuck",10]],salt:18,seasonings:[["White pepper",2],["Nutmeg",0.5],["Garlic powder",1],["Onion powder",2]],liquids:[["Cold lager",80]],casing:"30–32 mm hog casing",method:"Keep everything cold. Grind, mix dry ingredients, add beer and bind well. Stuff gently and link.",notes:"Use cold beer."},
-{name:"Garlic & Herb Sausage",category:"Fresh",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Garlic powder",3],["Parsley",2],["Black pepper",2],["Thyme",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Grind chilled meat. Add salt and seasonings. Add water gradually while mixing until the farce becomes sticky. Stuff and link.",notes:"Keep the mixture cold throughout."},
-{name:"Smoky Paprika Sausage",category:"Spicy",baseKg:1,meats:[["Pork shoulder",65],["Pork back fat",25],["Beef chuck",10]],salt:18,seasonings:[["Smoked paprika",6],["Black pepper",2],["Garlic powder",2],["Cumin",1]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Grind, mix dry ingredients thoroughly, add water and bind. Stuff and link.",notes:"Adjust chilli separately if desired."}
+{name:"Classic Fresh Pork Sausage",photo:"images/classic-fresh-pork.jpg",category:"Fresh",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Black pepper",2.5],["Sage",1.5],["Garlic powder",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Chill meat and fat. Grind. Mix salt and seasonings thoroughly. Add ice water and mix until tacky. Stuff into casing, link, chill and cook thoroughly.",notes:"A simple 70/30 pork-and-fat base."},
+{name:"Italian Fennel Sausage",photo:"images/italian-fennel.jpg",category:"Italian",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Fennel seed",4],["Black pepper",2],["Garlic powder",2],["Chilli flakes",0.8]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Chill, grind, mix seasonings with meat, add water and mix until tacky. Stuff and link.",notes:"Excellent grilled or with pasta."},
+{name:"Beer & Onion Bratwurst",photo:"images/beer-onion-bratwurst.jpg",category:"Bratwurst",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",20],["Beef chuck",10]],salt:18,seasonings:[["White pepper",2],["Nutmeg",0.5],["Garlic powder",1],["Onion powder",2]],liquids:[["Cold lager",80]],casing:"30–32 mm hog casing",method:"Keep everything cold. Grind, mix dry ingredients, add beer and bind well. Stuff gently and link.",notes:"Use cold beer."},
+{name:"Garlic & Herb Sausage",photo:"images/garlic-herb.jpg",category:"Fresh",baseKg:1,meats:[["Pork shoulder",70],["Pork back fat",30]],salt:18,seasonings:[["Garlic powder",3],["Parsley",2],["Black pepper",2],["Thyme",1]],liquids:[["Ice water",60]],casing:"32–35 mm hog casing",method:"Grind chilled meat. Add salt and seasonings. Add water gradually while mixing until the farce becomes sticky. Stuff and link.",notes:"Keep the mixture cold throughout."},
+{name:"Smoky Paprika Sausage",photo:"images/smoky-paprika.jpg",category:"Spicy",baseKg:1,meats:[["Pork shoulder",65],["Pork back fat",25],["Beef chuck",10]],salt:18,seasonings:[["Smoked paprika",6],["Black pepper",2],["Garlic powder",2],["Cumin",1]],liquids:[["Ice water",50]],casing:"32–35 mm hog casing",method:"Grind, mix dry ingredients thoroughly, add water and bind. Stuff and link.",notes:"Adjust chilli separately if desired."}
 ];
 
 let mine=JSON.parse(localStorage.getItem("ss_recipes")||"[]"), photoData="";
@@ -110,6 +110,7 @@ function card(r,isMine=false){return `<article class="card"><img src="${imgFor(r
 function renderBuilt(){builtGrid.innerHTML=[...built].sort((a,b)=>a.name.localeCompare(b.name)).map(r=>card(r)).join("")}
 function renderMine(){myGrid.innerHTML=mine.length?mine.map(r=>card(r,true)).join(""):`<div class="notice">No recipes yet. Tap “＋ Add Recipe” to create your first one.</div>`}
 
+function titleCaseWords(s){return String(s||"").trim().replace(/\s+/g," ").replace(/(^|[\s\-'])\S/g,m=>m.toUpperCase())}
 const meatOptions=["Beef brisket","Beef chuck","Beef fat / suet","Chicken breast","Chicken thigh","Chicken skin","Duck","Duck fat","Lamb fat","Lamb shoulder","Pork back fat","Pork belly","Pork jowl","Pork shoulder","Turkey breast","Turkey thigh","Veal","Custom"].sort((a,b)=>a==="Custom"?1:b==="Custom"?-1:a.localeCompare(b));
 function meatOptionHtml(selected=""){
  let opts=meatOptions.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("");
@@ -124,7 +125,7 @@ function addMeatRow(name="",pct=""){
    if(e.target.value==="Custom"){
      let v=prompt("Enter custom meat or fat name:");
      if(v && v.trim()){
-       let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild);
+       let custom=titleCaseWords(v),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild);
      } else e.target.value=meatOptions[0];
    }
    updateEditorBreakdown();
@@ -146,7 +147,7 @@ function addFormulaRow(type,name="",value=""){
  let list=type==="seasoning"?seasoningOptions:liquidOptions,unit=type==="seasoning"?"g":"ml";
  d.innerHTML=`<select class="fname">${optionHtml(list,name||list[0])}</select><input class="fval" type="number" min="0" step="0.01" placeholder="${unit} for batch" value="${value}"><button type="button" class="btn danger" onclick="this.parentElement.remove();updateSeasoningTotal()">×</button>`;
  box.appendChild(d);
- d.querySelector(".fname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom "+(type==="seasoning"?"herb/spice":"liquid")+" name:");if(v&&v.trim()){let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=list[0]}});
+ d.querySelector(".fname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom "+(type==="seasoning"?"herb/spice":"liquid")+" name:");if(v&&v.trim()){let custom=titleCaseWords(v),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=list[0]}});
  d.querySelector(".fval").addEventListener("input",updateSeasoningTotal);updateSeasoningTotal()
 }
 function addSeasoningRow(name="",value=""){addFormulaRow("seasoning",name,value)}
@@ -155,7 +156,7 @@ function addOtherRow(name="",value="",unit="each"){
  let d=document.createElement("div");d.className="formula-row formula-other";
  d.innerHTML=`<select class="oname">${optionHtml(otherOptions,name||otherOptions[0])}</select><input class="oval" type="number" min="0" step="0.01" placeholder="Qty for batch" value="${value}"><select class="ounit">${optionHtml(["each","g","ml"],unit)}</select><button type="button" class="btn danger" onclick="this.parentElement.remove()">×</button>`;
  otherRows.appendChild(d);
- d.querySelector(".oname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom ingredient name:");if(v&&v.trim()){let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=otherOptions[0]}})
+ d.querySelector(".oname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom ingredient name:");if(v&&v.trim()){let custom=titleCaseWords(v),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=otherOptions[0]}})
 }
 function getFormulaRows(type){return [...document.querySelectorAll("#"+type+"Rows .formula-row")].map(r=>[r.querySelector(".fname").value.trim(),Number(r.querySelector(".fval").value)||0]).filter(x=>x[0])}
 function getOtherRows(){return [...document.querySelectorAll("#otherRows .formula-other")].map(r=>[r.querySelector(".oname").value.trim(),Number(r.querySelector(".oval").value)||0,r.querySelector(".ounit").value]).filter(x=>x[0])}
@@ -195,11 +196,11 @@ recipeForm.onsubmit=e=>{
  let sRows=getFormulaRows("seasoning"),target=Number(seasoningTotal.value)||0,sSum=sRows.reduce((a,x)=>a+x[1],0);
  if(sRows.length&&target>0&&Math.abs(sSum-target)>0.01){alert("Seasoning rows total "+sSum.toFixed(2)+" g, but the target is "+target.toFixed(2)+" g. Please make them match.");return}
  let id=editId.value||Date.now().toString(),old=mine.find(x=>x.id===id);
- let r={id,name:name.value,category:category.value,baseKg:1,meats:ms,salt:batchKg>0?Number(salt.value)/batchKg:0,seasonings:normalizeSeasonings(sRows,batchKg),liquids:normalizeLiquids(getFormulaRows("liquid"),batchKg),others:normalizeOthers(getOtherRows(),batchKg),casing:casing.value,method:method.value,notes:notes.value,photo:photoData||(old&&old.photo)||""};
+ let r={id,name:titleCaseWords(document.getElementById('name').value),category:category.value,baseKg:1,meats:ms,salt:batchKg>0?Number(salt.value)/batchKg:0,seasonings:normalizeSeasonings(sRows,batchKg),liquids:normalizeLiquids(getFormulaRows("liquid"),batchKg),others:normalizeOthers(getOtherRows(),batchKg),casing:casing.value,method:method.value,notes:notes.value,photo:photoData||(old&&old.photo)||""};
  let i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=r;else mine.push(r);localStorage.setItem("ss_recipes",JSON.stringify(mine));resetForm();showTab("mine")
 }
 function editRecipe(id){
- let r=mine.find(x=>x.id===id);if(!r)return;showTab("add");editId.value=r.id;name.value=r.name;category.value=r.category;baseKg.value=1;salt.value=r.salt;
+ let r=mine.find(x=>x.id===id);if(!r)return;showTab("add");editId.value=r.id;document.getElementById('name').value=r.name;category.value=r.category;baseKg.value=1;salt.value=r.salt;
  seasoningRows.innerHTML="";liquidRows.innerHTML="";otherRows.innerHTML="";
  normalizeFormulaRows(r.seasonings,"seasoning").forEach(x=>addSeasoningRow(x[0],Number(x[1]).toFixed(3)));
  normalizeFormulaRows(r.liquids,"liquid").forEach(x=>addLiquidRow(x[0],Number(x[1]).toFixed(3)));
@@ -215,6 +216,6 @@ function resetForm(){
  seasoningTotal.value="";updateEditorBreakdown();updateSeasoningTotal()
 }
 let deferredPrompt;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e});installBtn.onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else{alert("To install: in Chrome tap ⋮ → Add to Home screen (or Install app). Then confirm.")}};
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=10");
 resetForm();renderBuilt();
 </script></body></html>
