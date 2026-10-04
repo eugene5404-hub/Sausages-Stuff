@@ -135,17 +135,18 @@ function addMeatRow(name="",pct=""){
 function updatePct(){let s=[...document.querySelectorAll(".mpct")].reduce((a,e)=>a+(Number(e.value)||0),0);pctSum.textContent=`Total: ${s.toFixed(1)}%`;pctSum.className="sum "+(Math.abs(s-100)<0.01?"ok":"bad")}
 function updateEditorBreakdown(){let kg=Number(baseKg.value)||0;let rows=[...document.querySelectorAll("#meatRows .meatrow")];editorBreakdownRows.innerHTML=rows.map(r=>{let n=r.querySelector(".mname").value.trim()||"Unnamed";let pct=Number(r.querySelector(".mpct").value)||0;return `<div class="ingredient">${esc(n)}: <b>${(kg*1000*pct/100).toFixed(1)} g</b> (${pct.toFixed(1)}%)</div>`}).join("")}
 function getMeats(){return [...document.querySelectorAll("#meatRows .meatrow")].map(r=>[r.querySelector(".mname").value.trim(),Number(r.querySelector(".mpct").value)||0]).filter(x=>x[0])}
-const seasoningOptions=["Black pepper","White pepper","White pepper powder","Garlic powder","Onion powder","Ginger powder","Mace powder","Nutmeg","Coriander powder","Coriander seed","Caraway powder","Caraway seed","Mustard powder","Fennel seed","Cumin","Paprika","Smoked paprika","Chilli flakes","Chilli powder","Sage","Thyme","Marjoram leaves","Rosemary","Parsley","Oregano","Basil","Allspice","Celery seed","Dill seed","Bay leaf","Custom"].sort((a,b)=>a.localeCompare(b));
-const liquidOptions=["Ice water","Water","Milk","Heavy cream","Beer","Red wine","White wine","Stock","Chicken stock","Beef stock","Apple juice","Orange juice","Cider","Custom"].sort((a,b)=>a.localeCompare(b));
-const otherOptions=["Whole egg","Egg white","Egg yolk","Breadcrumbs","Sugar","Honey","Cheese","Onion","Fresh garlic","Fresh herbs","Mustard","Vinegar","Lemon juice","Custom"].sort((a,b)=>a.localeCompare(b));
+const customLast=(a,b)=>a==="Custom"?1:b==="Custom"?-1:a.localeCompare(b);
+const seasoningOptions=["Black pepper","White pepper","White pepper powder","Garlic powder","Onion powder","Ginger powder","Mace powder","Nutmeg","Coriander powder","Coriander seed","Caraway powder","Caraway seed","Mustard powder","Fennel seed","Cumin","Paprika","Smoked paprika","Chilli flakes","Chilli powder","Sage","Thyme","Marjoram leaves","Rosemary","Parsley","Oregano","Basil","Allspice","Celery seed","Dill seed","Bay leaf","Custom"].sort(customLast);
+const liquidOptions=["Ice water","Water","Milk","Heavy cream","Beer","Red wine","White wine","Stock","Chicken stock","Beef stock","Apple juice","Orange juice","Cider","Custom"].sort(customLast);
+const otherOptions=["Whole egg","Egg white","Egg yolk","Breadcrumbs","Sugar","Honey","Cheese","Onion","Fresh garlic","Fresh herbs","Mustard","Vinegar","Lemon juice","Custom"].sort(customLast);
 
-function optionHtml(list,selected=""){return list.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("")}
+function optionHtml(list,selected=""){let values=[...list];if(selected && !values.includes(selected))values=[selected,...values];return values.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("")}
 function addFormulaRow(type,name="",value=""){
  let box=document.getElementById(type+"Rows"),d=document.createElement("div");d.className="formula-row";
  let list=type==="seasoning"?seasoningOptions:liquidOptions,unit=type==="seasoning"?"g":"ml";
  d.innerHTML=`<select class="fname">${optionHtml(list,name||list[0])}</select><input class="fval" type="number" min="0" step="0.01" placeholder="${unit} for batch" value="${value}"><button type="button" class="btn danger" onclick="this.parentElement.remove();updateSeasoningTotal()">×</button>`;
  box.appendChild(d);
- d.querySelector(".fname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom "+(type==="seasoning"?"herb/spice":"liquid")+" name:");if(v)e.target.value=v;else e.target.value=list[0]}});
+ d.querySelector(".fname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom "+(type==="seasoning"?"herb/spice":"liquid")+" name:");if(v&&v.trim()){let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=list[0]}});
  d.querySelector(".fval").addEventListener("input",updateSeasoningTotal);updateSeasoningTotal()
 }
 function addSeasoningRow(name="",value=""){addFormulaRow("seasoning",name,value)}
@@ -154,7 +155,7 @@ function addOtherRow(name="",value="",unit="each"){
  let d=document.createElement("div");d.className="formula-row formula-other";
  d.innerHTML=`<select class="oname">${optionHtml(otherOptions,name||otherOptions[0])}</select><input class="oval" type="number" min="0" step="0.01" placeholder="Qty for batch" value="${value}"><select class="ounit">${optionHtml(["each","g","ml"],unit)}</select><button type="button" class="btn danger" onclick="this.parentElement.remove()">×</button>`;
  otherRows.appendChild(d);
- d.querySelector(".oname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom ingredient name:");if(v)e.target.value=v;else e.target.value=otherOptions[0]}})
+ d.querySelector(".oname").addEventListener("change",e=>{if(e.target.value==="Custom"){let v=prompt("Enter custom ingredient name:");if(v&&v.trim()){let custom=v.trim(),o=document.createElement("option");o.value=custom;o.textContent=custom;o.selected=true;e.target.insertBefore(o,e.target.firstChild)}else e.target.value=otherOptions[0]}})
 }
 function getFormulaRows(type){return [...document.querySelectorAll("#"+type+"Rows .formula-row")].map(r=>[r.querySelector(".fname").value.trim(),Number(r.querySelector(".fval").value)||0]).filter(x=>x[0])}
 function getOtherRows(){return [...document.querySelectorAll("#otherRows .formula-other")].map(r=>[r.querySelector(".oname").value.trim(),Number(r.querySelector(".oval").value)||0,r.querySelector(".ounit").value]).filter(x=>x[0])}
