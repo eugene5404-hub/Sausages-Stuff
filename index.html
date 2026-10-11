@@ -13,7 +13,7 @@ header{background:var(--red);color:#fff;padding:18px 16px;position:sticky;top:0;
 main{max-width:920px;margin:auto;padding:16px}.tabs{display:flex;gap:8px;margin-bottom:14px;overflow:auto}.tabs button,.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;background:#f0dfcf;color:var(--ink)}.tabs button.active,.btn.primary{background:var(--red);color:#fff}.btn.danger{background:#f6d9d4;color:#7d2117}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 3px 12px #5a32130d}.card img{width:100%;height:180px;object-fit:cover;background:#ead9c5}.cardbody{padding:14px}.tag{display:inline-block;font-size:12px;background:#f4e7d8;padding:4px 8px;border-radius:99px;margin:2px}.muted{color:var(--muted)}h2{margin:8px 0}h3{margin:4px 0 8px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.field{margin:10px 0}.field label{display:block;font-weight:700;margin-bottom:5px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #d9c8b7;border-radius:10px;background:#fff;font:inherit}.field textarea{min-height:100px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.recipe-view{display:none}.recipe-view img{width:100%;max-height:360px;object-fit:cover;border-radius:16px}.ingredient{padding:8px 0;border-bottom:1px solid var(--line)}footer{text-align:center;color:var(--muted);padding:30px 10px;font-size:13px}
+.recipe-view{display:none}.recipe-view img{width:100%;max-height:360px;object-fit:cover;border-radius:16px}.ingredient{padding:8px 0;border-bottom:1px solid var(--line)}.recipe-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;margin:8px 0 18px}footer{text-align:center;color:var(--muted);padding:30px 10px;font-size:13px}
 #installBtn{display:none;background:#fff;color:var(--red);margin-top:10px}.photo-preview{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px}
 .notice{padding:12px;border-radius:12px;background:#fff0d5;margin:12px 0;font-size:14px}.composition{background:#faf1e5;border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}.meatrow,.formula-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(90px,1fr) auto;gap:8px;margin:8px 0;align-items:center}.sum{font-weight:800;margin-top:8px}.sum.ok{color:var(--ok)}.sum.bad{color:var(--bad)}.mini{font-size:12px;color:var(--muted)} .formula-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(85px,1fr) auto;gap:8px;margin:8px 0;align-items:center}
 .formula-other{grid-template-columns:minmax(0,2fr) minmax(85px,1fr) minmax(75px,.8fr) auto}
@@ -173,7 +173,7 @@ function normalizeOthers(rows,kg){return rows.map(([n,x,u])=>[n,kg>0?x/kg:0,u])}
 function viewRecipe(r){
  document.querySelectorAll("main>section").forEach(s=>s.style.display="none");let v=document.getElementById("view");v.style.display="block";
  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
- v.innerHTML=`<button class="btn" onclick="showTab('recipes')">← Back</button><h2>${esc(r.name)}</h2><img src="${imgFor(r)}"><p><span class="tag">${esc(r.category)}</span></p><h3>Meat & Fat Composition</h3><div id="comp"></div><div class="field"><label>Total batch weight (kg)</label><input id="scaleKg" type="number" min="0.01" step="0.01" value="1" oninput="scaleView(window.currentRecipe)"></div><div id="scaled"></div><h3>Method</h3><p>${esc(r.method).replace(/\\n/g,"<br>")}</p><h3>Notes</h3><p>${esc(r.notes||"")}</p>`;
+ v.innerHTML=`<button class="btn" onclick="showTab('recipes')">← Back</button><h2>${esc(r.name)}</h2><img src="${imgFor(r)}"><p><span class="tag">${esc(r.category)}</span></p><h3>Meat & Fat Composition</h3><div id="comp"></div><div class="field"><label>Total batch weight (kg)</label><input id="scaleKg" type="number" min="0.01" step="0.01" value="1" oninput="scaleView(window.currentRecipe)"></div><div id="scaled"></div><h3>Method</h3><div class="recipe-text">${esc(r.method||"")}</div><h3>Notes</h3><div class="recipe-text">${esc(r.notes||"")}</div>`;
  window.currentRecipe=r;scaleView(r)
 }
 function scaleView(r){
@@ -185,6 +185,18 @@ function scaleView(r){
  for(let [n,x,u] of (r.others||[]))out+=`<div class="ingredient">${esc(n)}: <b>${(x*kg).toFixed(2)} ${esc(u)}</b> <span class="mini">(${Number(x).toFixed(3)} ${esc(u)}/kg)</span></div>`;
  out+=`<div class="ingredient"><b>Casing:</b> ${esc(r.casing||"As required")}</div>`;document.getElementById("scaled").innerHTML=out
 }
+
+// Automatically number the next method step when Return follows a numbered step.
+method.addEventListener("keydown",function(e){
+ if(e.key!=="Enter"||e.shiftKey||e.ctrlKey||e.altKey||e.metaKey)return;
+ var el=e.currentTarget,start=el.selectionStart,end=el.selectionEnd,value=el.value;
+ var lineStart=value.lastIndexOf("\n",start-1)+1;
+ var currentLine=value.slice(lineStart,start);
+ var m=currentLine.match(/^\s*(\d+)[.)]\s+.*$/);
+ if(!m)return;
+ e.preventDefault();
+ el.setRangeText("\n"+(Number(m[1])+1)+". ",start,end,"end");
+});
 
 photo.onchange=e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{let im=new Image();im.onload=()=>{let max=1000,scale=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext("2d").drawImage(im,0,0,c.width,c.height);photoData=c.toDataURL("image/jpeg",.76);preview.src=photoData;preview.style.display="block";removePhoto.style.display="inline-block"};im.src=reader.result};reader.readAsDataURL(f)}
 removePhoto.onclick=()=>{photoData="";photo.value="";preview.style.display="none";removePhoto.style.display="none"}
