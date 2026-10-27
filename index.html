@@ -42,10 +42,12 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 <main class="wrap">
 <div class="actionbar">
 <button class="btn" onclick="openFinder()">🌭 What Can I Cook?</button>
+<button class="btn secondary" onclick="showCategory('Sausage Making')">🌭 Sausage Making</button>
+<button class="btn secondary" onclick="showCategory('My Recipes')">📖 My Recipes</button>
 <button class="btn secondary" onclick="openCollection()">🧊 Sausage Collection <span id="stockCount"></span></button>
 <button class="btn secondary" onclick="openPantry()">🧊 My Sausages <span id="pantryCount"></span></button>
 <button class="btn secondary" onclick="openShopping()">🛒 Shopping List <span id="cartCount"></span></button>
-<button class="btn secondary" onclick="openEditor()">＋ My Recipe</button>
+<button class="btn secondary" onclick="openEditor()">Add Recipe</button>
 </div>
 <div class="filters" id="filters"></div>
 <div class="grid" id="recipes"></div>
@@ -111,7 +113,8 @@ function notesHtml(notes){
  if(!value)return "";
  return `<h3>Notes</h3><div class="recipe-notes">${esc(value).replace(/\n{2,}/g,"</div><div class=\"recipe-notes\">").replace(/\n/g,"<br>")}</div>`;
 }
-function cats(){return ["All","My Recipes",...new Set(recipes.map(r=>r.cat).filter(Boolean))]}
+function cats(){return ["All",...new Set(recipes.map(r=>r.cat).filter(Boolean).filter(c=>c!=="Sausage Making"&&c!=="My Recipes"))]}
+function showCategory(c){category=c;render();document.getElementById("recipes").scrollIntoView({behavior:"smooth",block:"start"})}
 function renderFilters(){filters.innerHTML=cats().map(c=>`<button class="chip ${c===category?'active':''}" onclick="category='${esc(c)}';render()">${esc(c)}</button>`).join("")}
 function render(){
  renderFilters(); const q=search.value.toLowerCase();
@@ -188,7 +191,7 @@ function findRecipes(){
 }
 function openEditor(id=null){
  editingId=id; const r=id?recipes.find(x=>x.id===id):{name:"",cat:"My Recipes",time:"",emoji:"🌭",desc:"",ing:[],steps:[],notes:"",servings:4,photo:"",tags:[]};
- detail.innerHTML=`<h2>${id?"Edit Recipe":"Add My Recipe"}</h2>
+ detail.innerHTML=`<h2>${id?"Edit Recipe":"Add Recipe"}</h2>
  <label>Name<br><input id="rn" value="${esc(r.name)}" style="width:100%;padding:11px"></label><br>
  <label>Category<br><input id="rc" value="${esc(r.cat)}" style="width:100%;padding:11px"></label><br>
  <label>Sausage type / tags<br><input id="rg" value="${esc((r.tags||[]).join(", "))}" placeholder="pork, bratwurst, spicy" style="width:100%;padding:11px"></label><br>
@@ -350,7 +353,7 @@ search.addEventListener("input",render);render();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      const registration = await navigator.serviceWorker.register("./sw.js?v=12", { updateViaCache: "none" });
+      const registration = await navigator.serviceWorker.register("./sw.js?v=13", { updateViaCache: "none" });
       await registration.update();
     } catch (error) {
       console.warn("Service worker update check failed:", error);
