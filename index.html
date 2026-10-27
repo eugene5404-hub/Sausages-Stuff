@@ -321,4 +321,17 @@ updateStockCount();
 
 search.addEventListener("input",render);render();
 </script>
+<!-- Sausages & Stuff update: register the versioned service worker so installed/offline copies refresh. -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./sw.js?v=11", { updateViaCache: "none" });
+      await registration.update();
+    } catch (error) {
+      console.warn("Service worker update check failed:", error);
+    }
+  });
+}
+</script>
 </body></html>
