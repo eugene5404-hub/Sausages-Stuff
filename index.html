@@ -26,6 +26,7 @@ footer{text-align:center;color:var(--muted);padding:28px 10px}
 .list-item input{width:22px;height:22px}.qty{font-weight:700}.small{font-size:12px;color:var(--muted)}
 
 .inventory-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin:9px 0}
+.recipe-method{padding-left:1.45rem;line-height:1.65;margin-top:8px}.recipe-method li{padding-left:.25rem;margin:0 0 10px}.recipe-notes{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin:8px 0 18px}.recipe-notes p{margin:0 0 10px}.recipe-field{width:100%;padding:11px;font:inherit;line-height:1.5;resize:vertical}
 .badge{display:inline-block;background:#f1e8e1;border-radius:99px;padding:4px 9px;font-size:12px;margin:2px}
 .expiring{font-weight:700}.match{border-left:5px solid var(--accent2)}
 </style>
@@ -76,6 +77,16 @@ let category="All",editingId=null;
 const filters=document.getElementById("filters"),box=document.getElementById("recipes"),search=document.getElementById("search"),dlg=document.getElementById("dlg"),detail=document.getElementById("detail");
 function save(){localStorage.setItem("sausageRecipes",JSON.stringify(recipes));localStorage.setItem("sausageShopping",JSON.stringify(shopping))}
 function esc(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;")}
+function cleanLines(value){
+ const raw=Array.isArray(value)?value.join("\n"):String(value??"");
+ return raw.replace(/\r/g,"").split(/\n+/).map(line=>line.trim().replace(/^\s*(?:(?:step\s*)?\d+[.)-]|[-•*])\s*/i,"").trim()).filter(Boolean);
+}
+function methodHtml(steps){return cleanLines(steps).map(step=>`<li>${esc(step)}</li>`).join("")}
+function notesHtml(notes){
+ const value=String(notes??"").replace(/\r/g,"").trim();
+ if(!value)return "";
+ return `<h3>Notes</h3><div class="recipe-notes">${esc(value).replace(/\n{2,}/g,"</div><div class=\"recipe-notes\">").replace(/\n/g,"<br>")}</div>`;
+}
 function cats(){return ["All","My Recipes",...new Set(recipes.map(r=>r.cat).filter(Boolean))]}
 function renderFilters(){filters.innerHTML=cats().map(c=>`<button class="chip ${c===category?'active':''}" onclick="category='${esc(c)}';render()">${esc(c)}</button>`).join("")}
 function render(){
@@ -97,8 +108,8 @@ function openRecipe(id){
   <div class="meta">${esc(r.cat||"Condiment")} • ${esc(r.time||"—")}</div>
   <h2>${esc(r.name)}</h2><p>${esc(r.desc||"")}</p>
   <h3>Ingredients</h3><ul>${r.ing.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
-  <h3>Method</h3><ol>${r.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
-  ${r.notes?`<h3>Storage &amp; Sausage Use</h3><p style="white-space:pre-wrap;line-height:1.55">${esc(r.notes)}</p>`:""}
+  <h3>Method</h3><ol class="recipe-method">${methodHtml(r.steps)}</ol>
+  ${r.notes?`<h3>Storage &amp; Sausage Use</h3><div class="recipe-notes">${esc(r.notes).replace(/\r/g,"").replace(/\n/g,"<br>")}</div>`:""}
   <button class="btn secondary" onclick="addIngredients(${r.id})">🛒 Add Ingredients to Shopping List</button>
   <button class="btn" onclick="toggleFav(${r.id});openRecipe(${r.id})">${r.fav?'★ Saved':'☆ Save favourite'}</button>`;
   dlg.showModal();return;
@@ -109,7 +120,8 @@ function openRecipe(id){
  <label><b>Servings:</b> <input id="servInput" type="number" min="1" max="30" value="${r.servings||4}" style="width:70px;padding:7px" onchange="changeServings(${r.id},this.value)"></label>
  <h3>Ingredients</h3><ul id="scaledIng">${scaledIngredients(r, r.servings||4)}</ul>
  <button class="btn secondary" onclick="addIngredients(${r.id})">🛒 Add Ingredients to Shopping List</button>
- <h3>Method</h3><ol>${r.steps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+ <h3>Method</h3><ol class="recipe-method">${methodHtml(r.steps)}</ol>
+ ${r.notes?notesHtml(r.notes):""}
  <button class="btn" onclick="toggleFav(${r.id});openRecipe(${r.id})">${r.fav?'★ Saved':'☆ Save favourite'}</button>
  ${r.own?`<button class="btn secondary" onclick="openEditor(${r.id})">Edit</button><button class="btn secondary" onclick="deleteRecipe(${r.id})">Delete</button>`:""}`;
  dlg.showModal();
@@ -151,7 +163,7 @@ function findRecipes(){
  (matches.length?matches.map(r=>`<div class="card"><b>${r.emoji||"🌭"} ${esc(r.name)}</b><p class="meta">${esc(r.cat)} • ${esc(r.time)}</p><button class="btn" onclick="openRecipe(${r.id})">View</button></div>`).join(""):"<p>Try pork, bratwurst, Italian, spicy, curry, chicken or another sausage type.</p>");
 }
 function openEditor(id=null){
- editingId=id; const r=id?recipes.find(x=>x.id===id):{name:"",cat:"My Recipes",time:"",emoji:"🌭",desc:"",ing:[],steps:[],servings:4,photo:"",tags:[]};
+ editingId=id; const r=id?recipes.find(x=>x.id===id):{name:"",cat:"My Recipes",time:"",emoji:"🌭",desc:"",ing:[],steps:[],notes:"",servings:4,photo:"",tags:[]};
  detail.innerHTML=`<h2>${id?"Edit Recipe":"Add My Recipe"}</h2>
  <label>Name<br><input id="rn" value="${esc(r.name)}" style="width:100%;padding:11px"></label><br>
  <label>Category<br><input id="rc" value="${esc(r.cat)}" style="width:100%;padding:11px"></label><br>
@@ -160,14 +172,15 @@ function openEditor(id=null){
  <label>Servings<br><input id="rv" type="number" min="1" value="${r.servings||4}" style="width:100%;padding:11px"></label><br>
  <label>Emoji<br><input id="re" value="${esc(r.emoji||"🌭")}" style="width:100%;padding:11px"></label><br>
  <label>Recipe photo URL (optional)<br><input id="rp" value="${esc(r.photo||"")}" placeholder="Paste an image URL" style="width:100%;padding:11px"></label><br>
- <label>Description<br><textarea id="rd" style="width:100%;padding:11px">${esc(r.desc||"")}</textarea></label><br>
- <label>Ingredients — one per line<br><textarea id="ri" rows="7" style="width:100%;padding:11px">${esc(r.ing.join("\n"))}</textarea></label><br>
- <label>Method — one step per line<br><textarea id="rs" rows="8" style="width:100%;padding:11px">${esc(r.steps.join("\n"))}</textarea></label><br>
+ <label>Description<br><textarea id="rd" class="recipe-field" rows="3">${esc(r.desc||"")}</textarea></label><br>
+ <label>Ingredients — one per line<br><textarea id="ri" class="recipe-field" rows="7">${esc(r.ing.join("\n"))}</textarea></label><br>
+ <label>Method — one step per line<br><textarea id="rs" class="recipe-field" rows="8" placeholder="Enter one method step per line">${esc(cleanLines(r.steps).join("\n"))}</textarea></label><br>
+ <label>Notes — optional; leave a blank line between paragraphs<br><textarea id="rnotes" class="recipe-field" rows="5" placeholder="Storage, serving tips, allergens, or other notes">${esc(r.notes||"")}</textarea></label><br>
  <button class="btn" onclick="saveRecipe()">Save Recipe</button><button class="btn secondary" onclick="dlg.close()">Cancel</button>`;
  dlg.showModal();
 }
 function saveRecipe(){
- const r={id:editingId||Date.now(),name:rn.value.trim(),cat:rc.value.trim()||"My Recipes",tags:rg.value.split(",").map(x=>x.trim()).filter(Boolean),time:rt.value.trim(),servings:Math.max(1,parseInt(rv.value)||4),emoji:re.value.trim()||"🌭",photo:rp.value.trim(),desc:rd.value.trim(),ing:ri.value.split("\n").map(x=>x.trim()).filter(Boolean),steps:rs.value.split("\n").map(x=>x.trim()).filter(Boolean),fav:false,own:true};
+ const r={id:editingId||Date.now(),name:rn.value.trim(),cat:rc.value.trim()||"My Recipes",tags:rg.value.split(",").map(x=>x.trim()).filter(Boolean),time:rt.value.trim(),servings:Math.max(1,parseInt(rv.value)||4),emoji:re.value.trim()||"🌭",photo:rp.value.trim(),desc:rd.value.trim(),ing:cleanLines(ri.value),steps:cleanLines(rs.value),notes:(rnotes.value||"").replace(/\r/g,"").trim(),fav:false,own:true};
  if(!r.name||!r.ing.length||!r.steps.length){alert("Please enter a name, ingredients and method.");return}
  if(editingId){const old=recipes.find(x=>x.id===editingId);r.fav=old.fav;recipes=recipes.map(x=>x.id===editingId?r:x)}else recipes.unshift(r);
  save();dlg.close();render();
