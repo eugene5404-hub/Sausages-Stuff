@@ -85,7 +85,7 @@ let recipes=JSON.parse(localStorage.getItem("sausageRecipes")||"null")||starterR
    if(Array.isArray(legacy)) legacy.forEach((r,i)=>{
      if(!r || !r.name || recipes.some(x=>x.name===r.name && x.cat==="Sausage Making")) return;
      const ingredients=[];
-     (r.meats||[]).forEach(x=>ingredients.push(`${x[1]}% ${x[0]} (for 1 kg: ${Math.round(10*x[1])} g)`));
+     (r.meats||[]).forEach(x=>ingredients.push(`${Math.round(10*Number(x[1]))} g ${x[0]}`));
      if(r.salt!=null) ingredients.push(`${r.salt} g salt`);
      (r.seasonings||[]).forEach(x=>ingredients.push(`${x[1]} g ${x[0]}`));
      (r.liquids||[]).forEach(x=>ingredients.push(`${x[1]} g ${x[0]}`));
@@ -95,7 +95,16 @@ let recipes=JSON.parse(localStorage.getItem("sausageRecipes")||"null")||starterR
      recipes.push(migrated);
    });
  } catch(e) { console.warn("Legacy recipe recovery check failed",e); }
- // Save the merged library locally so restored built-ins remain available offline.
+ // Repair legacy migrated meat lines saved by earlier versions (e.g. "75% Pork shoulder (for 1 kg: 750 g)").
+ recipes.forEach(r=>{
+   if(r.cat==="Sausage Making" && Array.isArray(r.ing)){
+     r.ing=r.ing.map(line=>{
+       const m=String(line).match(/^\s*\d+(?:\.\d+)?%\s*(.*?)\s*\(for 1 kg:\s*(\d+(?:\.\d+)?)\s*g\)\s*$/i);
+       return m ? `${m[2]} g ${m[1]}` : line;
+     });
+   }
+ });
+ // Save the merged library locally so restored built-ins and repaired legacy lines remain available offline.
  localStorage.setItem("sausageRecipes",JSON.stringify(recipes));
 let shopping=JSON.parse(localStorage.getItem("sausageShopping")||"[]");
 let category="All",editingId=null;
@@ -142,10 +151,10 @@ function openRecipe(id){
   dlg.showModal();return;
  }
  detail.innerHTML=`${r.photo?`<img class="recipe-photo" src="${esc(r.photo)}">`:`<div class="emoji">${r.emoji||"🌭"}</div>`}
- <div class="meta">${esc(r.cat||"My Recipe")} • ${esc(r.time||"—")} • serves <span id="servN">${r.servings||4}</span></div>
+ <div class="meta">${esc(r.cat||"My Recipe")} • ${esc(r.time||"—")}${r.cat==="Sausage Making"?" • formula per 1 kg meat/fat":` • serves <span id="servN">${r.servings||4}</span>`}</div>
  <h2>${esc(r.name)}</h2><p>${esc(r.desc||"")}</p>
- <label><b>Servings:</b> <input id="servInput" type="number" min="1" max="30" value="${r.servings||4}" style="width:70px;padding:7px" onchange="changeServings(${r.id},this.value)"></label>
- <h3>Ingredients</h3><ul id="scaledIng">${scaledIngredients(r, r.servings||4)}</ul>
+ ${r.cat==="Sausage Making"?`<label><b>Meat/fat mixture (kg):</b> <input id="kgInput" type="number" min="0.1" max="100" step="0.1" value="1" style="width:100px;padding:7px" onchange="changeKg(${r.id},this.value)"></label>`:`<label><b>Servings:</b> <input id="servInput" type="number" min="1" max="30" value="${r.servings||4}" style="width:70px;padding:7px" onchange="changeServings(${r.id},this.value)"></label>`}
+ <h3>Ingredients</h3><ul id="scaledIng">${r.cat==="Sausage Making"?scaledKgIngredients(r,1):scaledIngredients(r, r.servings||4)}</ul>
  <button class="btn secondary" onclick="addIngredients(${r.id})">🛒 Add Ingredients to Shopping List</button>
  <h3>Method</h3><ol class="recipe-method">${methodHtml(r.steps)}</ol>
  ${r.notes?notesHtml(r.notes):""}
@@ -153,14 +162,30 @@ function openRecipe(id){
  ${r.own?`<button class="btn secondary" onclick="openEditor(${r.id})">Edit</button><button class="btn secondary" onclick="deleteRecipe(${r.id})">Delete</button>`:""}`;
  dlg.showModal();
 }
-function parseQty(s){let m=s.match(/^(\d+(?:\.\d+)?)(\s*)(.*)$/);return m?{n:parseFloat(m[1]),rest:m[3]}:null}
+function parseQty(s){let m=String(s).match(/^\s*(\d+(?:\.\d+)?)(\s*)(.*)$/);return m?{n:parseFloat(m[1]),rest:m[3]}:null}
+function formatQty(n){return String(Math.round(n*1000)/1000)}
 function scaledIngredients(r,serv){
  const base=r.servings||4, factor=serv/base;
- return r.ing.map(x=>{let q=parseQty(x);if(!q)return `<li>${esc(x)}</li>`;let n=Math.round(q.n*factor*100)/100;return `<li><b>${n}</b> ${esc(q.rest)}</li>`}).join("");
+ return r.ing.map(x=>{let q=parseQty(x);if(!q)return `<li>${esc(x)}</li>`;let n=Math.round(q.n*factor*100)/100;return `<li><b>${formatQty(n)}</b> ${esc(q.rest)}</li>`}).join("");
+}
+function scaledKgIngredients(r,kg){
+ const factor=Math.max(0.1,Number(kg)||1);
+ return r.ing.map(x=>{
+   let line=String(x);
+   // Scale gram and millilitre quantities, but leave casing sizes and other dimensions alone.
+   return `<li>${esc(line.replace(/(\d+(?:\.\d+)?)\s*(g|kg|ml|l)\b/gi,(match,num,unit)=>{
+     const n=Number(num)*factor, u=unit.toLowerCase();
+     return `${formatQty(n)} ${unit}`;
+   }))}</li>`;
+ }).join("");
 }
 function changeServings(id,val){
  const r=recipes.find(x=>x.id===id), n=Math.max(1,parseInt(val)||1);
  document.getElementById("servN").textContent=n;document.getElementById("scaledIng").innerHTML=scaledIngredients(r,n);
+}
+function changeKg(id,val){
+ const r=recipes.find(x=>x.id===id), kg=Math.max(0.1,Number(val)||1);
+ document.getElementById("scaledIng").innerHTML=scaledKgIngredients(r,kg);
 }
 function toggleFav(id){let r=recipes.find(x=>x.id===id);r.fav=!r.fav;save();render()}
 function addIngredients(id){
@@ -353,7 +378,7 @@ search.addEventListener("input",render);render();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      const registration = await navigator.serviceWorker.register("./sw.js?v=13", { updateViaCache: "none" });
+      const registration = await navigator.serviceWorker.register("./sw.js?v=14", { updateViaCache: "none" });
       await registration.update();
     } catch (error) {
       console.warn("Service worker update check failed:", error);
